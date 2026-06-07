@@ -279,8 +279,8 @@ jobs:
             NDK_ROOT="$ANDROID_SDK_ROOT/ndk/$(ls "$ANDROID_SDK_ROOT/ndk" | sort -V | tail -1)"
           fi
           NDK_BIN="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
-          ANDROID_CC="$NDK_BIN/armv7-linux-androideabi21-clang"
-          ANDROID_CXX="$NDK_BIN/armv7-linux-androideabi21-clang++"
+          ANDROID_CC="$NDK_BIN/armv7a-linux-androideabi21-clang"
+          ANDROID_CXX="$NDK_BIN/armv7a-linux-androideabi21-clang++"
           ANDROID_AR="$NDK_BIN/llvm-ar"
           ANDROID_RANLIB="$NDK_BIN/llvm-ranlib"
 
@@ -391,8 +391,8 @@ jobs:
             NDK_ROOT="$ANDROID_SDK_ROOT/ndk/$(ls "$ANDROID_SDK_ROOT/ndk" | sort -V | tail -1)"
           fi
           NDK_BIN="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
-          ANDROID_CC="$NDK_BIN/armv7-linux-androideabi21-clang"
-          ANDROID_CXX="$NDK_BIN/armv7-linux-androideabi21-clang++"
+          ANDROID_CC="$NDK_BIN/armv7a-linux-androideabi21-clang"
+          ANDROID_CXX="$NDK_BIN/armv7a-linux-androideabi21-clang++"
           ANDROID_AR="$NDK_BIN/llvm-ar"
           ANDROID_RANLIB="$NDK_BIN/llvm-ranlib"
 
@@ -1006,7 +1006,7 @@ jobs:
             echo "PATH=$NDK_BIN:$PATH"
             echo "NFQWS_ANDROID_API=21"
             echo "NFQWS_TARGET=armv7-linux-androideabi"
-            echo "NFQWS_CC=$NDK_BIN/armv7-linux-androideabi21-clang"
+            echo "NFQWS_CC=$NDK_BIN/armv7a-linux-androideabi21-clang"
             echo "NFQWS_AR=$NDK_BIN/llvm-ar"
             echo "NFQWS_RANLIB=$NDK_BIN/llvm-ranlib"
             echo "NFQWS_STRIP=$NDK_BIN/llvm-strip"
@@ -1683,8 +1683,8 @@ jobs:
             NDK_ROOT="$ANDROID_SDK_ROOT/ndk/$(ls "$ANDROID_SDK_ROOT/ndk" | sort -V | tail -1)"
           fi
           NDK_BIN="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
-          ANDROID_CC="$NDK_BIN/armv7-linux-androideabi21-clang"
-          ANDROID_CXX="$NDK_BIN/armv7-linux-androideabi21-clang++"
+          ANDROID_CC="$NDK_BIN/armv7a-linux-androideabi21-clang"
+          ANDROID_CXX="$NDK_BIN/armv7a-linux-androideabi21-clang++"
           ANDROID_AR="$NDK_BIN/llvm-ar"
           ANDROID_RANLIB="$NDK_BIN/llvm-ranlib"
 
@@ -1795,8 +1795,8 @@ jobs:
             NDK_ROOT="$ANDROID_SDK_ROOT/ndk/$(ls "$ANDROID_SDK_ROOT/ndk" | sort -V | tail -1)"
           fi
           NDK_BIN="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
-          ANDROID_CC="$NDK_BIN/armv7-linux-androideabi21-clang"
-          ANDROID_CXX="$NDK_BIN/armv7-linux-androideabi21-clang++"
+          ANDROID_CC="$NDK_BIN/armv7a-linux-androideabi21-clang"
+          ANDROID_CXX="$NDK_BIN/armv7a-linux-androideabi21-clang++"
           ANDROID_AR="$NDK_BIN/llvm-ar"
           ANDROID_RANLIB="$NDK_BIN/llvm-ranlib"
 
