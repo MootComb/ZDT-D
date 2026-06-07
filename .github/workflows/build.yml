@@ -320,12 +320,15 @@ jobs:
             cargo-armv7-linux-androideabi-
 
       - name: Verify Android Rust cross toolchain
+        env:
+          ANDROID_CC: ${{ env.CC_aarch64_linux_android }}
+          ANDROID_AR: ${{ env.AR_aarch64_linux_android }}
         run: |
           set -euo pipefail
           echo "NDK_ROOT=$NDK_ROOT"
           "$ANDROID_CC" --version | head -1
           "$ANDROID_AR" --version | head -1
-          rustc --print target-list | grep -qx '${{ env.CARGO_BUILD_TARGET }}'
+          rustc --print target-list | grep -qx 'armv7-linux-androideabi'
           cargo -V
           rustc -V
 
@@ -432,12 +435,15 @@ jobs:
             cargo-armv7-linux-androideabi-
 
       - name: Verify Android Rust cross toolchain
+        env:
+          ANDROID_CC: ${{ env.CC_aarch64_linux_android }}
+          ANDROID_AR: ${{ env.AR_aarch64_linux_android }}
         run: |
           set -euo pipefail
           echo "NDK_ROOT=$NDK_ROOT"
           "$ANDROID_CC" --version | head -1
           "$ANDROID_AR" --version | head -1
-          rustc --print target-list | grep -qx '${{ env.CARGO_BUILD_TARGET }}'
+          rustc --print target-list | grep -qx 'armv7-linux-androideabi'
           cargo -V
           rustc -V
 
@@ -1724,12 +1730,15 @@ jobs:
             cargo-armv7-linux-androideabi-
 
       - name: Verify Android Rust cross toolchain
+        env:
+          ANDROID_CC: ${{ env.CC_aarch64_linux_android }}
+          ANDROID_AR: ${{ env.AR_aarch64_linux_android }}
         run: |
           set -euo pipefail
           echo "NDK_ROOT=$NDK_ROOT"
           "$ANDROID_CC" --version | head -1
           "$ANDROID_AR" --version | head -1
-          rustc --print target-list | grep -qx '${{ env.CARGO_BUILD_TARGET }}'
+          rustc --print target-list | grep -qx 'armv7-linux-androideabi'
           cargo -V
           rustc -V
 
@@ -1836,12 +1845,15 @@ jobs:
             cargo-armv7-linux-androideabi-
 
       - name: Verify Android Rust cross toolchain
+        env:
+          ANDROID_CC: ${{ env.CC_aarch64_linux_android }}
+          ANDROID_AR: ${{ env.AR_aarch64_linux_android }}
         run: |
           set -euo pipefail
           echo "NDK_ROOT=$NDK_ROOT"
           "$ANDROID_CC" --version | head -1
           "$ANDROID_AR" --version | head -1
-          rustc --print target-list | grep -qx '${{ env.CARGO_BUILD_TARGET }}'
+          rustc --print target-list | grep -qx 'armv7-linux-androideabi'
           cargo -V
           rustc -V
 
