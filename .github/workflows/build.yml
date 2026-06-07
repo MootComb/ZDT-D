@@ -1576,10 +1576,11 @@ jobs:
         with:
           name: nfqws2-armeabi-v7a
           path: out/artifacts/nfqws2
-
+          
+        # dpitunnel-cli torproxy
       - name: Check prebuilt binaries
         run: |
-          REQUIRED=(byedpi dnscrypt dpitunnel-cli opera-proxy sing-box mieru torproxy lyrebird tun2socks mihomo)
+          REQUIRED=(byedpi dnscrypt opera-proxy sing-box mieru lyrebird tun2socks mihomo)
           MISSING=()
           for bin in "${REQUIRED[@]}"; do
             [[ -f "prebuilt/bin/armeabi-v7a/$bin" ]] || MISSING+=("$bin")
