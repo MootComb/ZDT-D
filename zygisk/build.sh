@@ -4,11 +4,11 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REQUESTED_OUT="${1:-}"
 if [[ "$REQUESTED_OUT" == "module" || "$REQUESTED_OUT" == "--module" ]]; then
-  OUT_SO="$ROOT_DIR/zygisk/armeabi-v7a-v8a.so"
+  OUT_SO="$ROOT_DIR/zygisk/armeabi-v7a.so"
 elif [[ -n "$REQUESTED_OUT" ]]; then
   OUT_SO="$REQUESTED_OUT"
 else
-  OUT_SO="$ROOT_DIR/out/armeabi-v7a-v8a.so"
+  OUT_SO="$ROOT_DIR/out/armeabi-v7a.so"
 fi
 API_LEVEL="${ANDROID_API_LEVEL:-24}"
 SRC="$ROOT_DIR/src/main.cpp"
@@ -102,7 +102,7 @@ COMMON_FLAGS=(
 link_with() {
   local compiler="$1"
   shift
-  "$compiler" "${COMMON_FLAGS[@]}" "$SRC" -o "$OUT_SO" -Wl,-soname,armeabi-v7a-v8a.so -Wl,--gc-sections -Wl,--exclude-libs,ALL "$@"
+  "$compiler" "${COMMON_FLAGS[@]}" "$SRC" -o "$OUT_SO" -Wl,-soname,armeabi-v7a.so -Wl,--gc-sections -Wl,--exclude-libs,ALL "$@"
 }
 
 if [[ ! -f "$SRC" ]]; then
@@ -130,9 +130,9 @@ elif command -v clang++ >/dev/null 2>&1; then
   msg "Using fallback host clang++ cross target"
   clang++ -target "armv7a-linux-android${API_LEVEL}" \
     "${COMMON_FLAGS[@]}" "$SRC" -o "$OUT_SO" \
-    -nostdlib -Wl,--allow-shlib-undefined -Wl,-soname,armeabi-v7a-v8a.so
+    -nostdlib -Wl,--allow-shlib-undefined -Wl,-soname,armeabi-v7a.so
 else
-  fail "No clang++/NDK compiler found for Zygisk armeabi-v7a-v8a.so"
+  fail "No clang++/NDK compiler found for Zygisk armeabi-v7a.so"
 fi
 
 if command -v llvm-strip >/dev/null 2>&1; then
