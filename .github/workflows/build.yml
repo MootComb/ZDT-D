@@ -340,8 +340,10 @@ jobs:
           RUSTFLAGS: ""
           CARGO_ENCODED_RUSTFLAGS: ""
           RUSTC_WRAPPER: ""
+          CC_armv7-linux-androideabi: ${{ env.CC_aarch64_linux_android }}
+          CFLAGS_armv7-linux-androideabi: "-D__ANDROID_API__=21"
+          AR_armv7-linux-androideabi: ${{ env.AR_aarch64_linux_android }}
         run: |
-          set -euo pipefail
           cargo build --manifest-path rust/zdtd/Cargo.toml --profile "${{ env.CARGO_PROFILE }}" --target "${{ env.CARGO_BUILD_TARGET }}"
 
       - name: Collect zdtd
