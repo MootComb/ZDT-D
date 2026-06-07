@@ -842,7 +842,10 @@ jobs:
           pushd "$SRC/amneziawg-go" > /dev/null
           GOOS=android \
           GOARCH=arm \
+          GOARM=7 \
           CGO_ENABLED=1 \
+          CC=$NDK_BIN/armv7a-linux-androideabi24-clang \
+          CGO_CFLAGS="-D__ANDROID_API__=24" \
             go build \
               -trimpath \
               -ldflags="-s -w -buildid=" \
@@ -939,8 +942,9 @@ jobs:
           pushd "$SRC/wireproxy" > /dev/null
           GOOS=android \
           GOARCH=arm \
+          GOARM=7 \
           CGO_ENABLED=1 \
-          CGO_CFLAGS: "-D__ANDROID_API__=24" \
+          CGO_CFLAGS="-D__ANDROID_API__=24" \
             go build \
               -trimpath \
               -ldflags="-s -w -buildid=" \
@@ -1281,10 +1285,9 @@ jobs:
           test -d "$luajitdir" || { echo "::error::LuaJIT source directory not found"; exit 1; }
           pushd "$luajitdir" > /dev/null
           make \
-            HOST_CC="gcc -m32" \
             BUILDMODE=static \
             XCFLAGS="-DLUAJIT_DISABLE_FFI" \
-            HOST_CC="cc" \
+            HOST_CC="gcc -m32" \
             CROSS= \
             CC="$NFQWS2_CC" \
             TARGET_AR="$NFQWS2_AR rcus" \
