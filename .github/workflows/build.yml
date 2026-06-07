@@ -2094,7 +2094,7 @@ jobs:
             fi
           done
 
-          KEYSTORE_PATH="$(pwd)/keystores/zdt-release.keystore"
+          KEYSTORE_PATH="$(pwd)/keystores/zdt-debug.keystore"
           mkdir -p "$(dirname "$KEYSTORE_PATH")"
 
           printf '%s' "$ZDT_KEYSTORE_BASE64" | base64 -d > "$KEYSTORE_PATH"
