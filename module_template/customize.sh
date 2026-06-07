@@ -49,15 +49,15 @@ fail() {
 }
 
 ################################################################################
-# Pre-checks: Android 9+ (SDK >= 28) and arm64 only
+# Pre-checks: Android 7+ (SDK >= 24) and armeabi-v7a only
 ################################################################################
 zdt_progress 65 "Running module pre-checks"
 hr
 sec "Magisk Module Pre-checks"
 ui_print "## Requirements:"
-ui_print "## - Android 9+ (SDK >= 28)"
+ui_print "## - Android 7+ (SDK >= 28)"
 ui_print "## - Officially supported: Android 11+ (SDK >= 30)"
-ui_print "## - arm64 only (arm64-v8a / aarch64)"
+ui_print "## - armeabi-v7a only (armeabi-v7a)"
 hr
 
 
@@ -164,15 +164,15 @@ ui_print "## - abilist:   ${ABILIST:-unknown}"
 ui_print "## - uname -m:  ${UNAME_M:-unknown}"
 hr
 
-if echo "$ABI64" | grep -qE '(^|[ ,])arm64-v8a([ ,]|$)'; then
-  ok "arm64-v8a detected (abilist64)"
-elif echo "$ABILIST $ABI" | grep -qE '(^|[ ,])arm64-v8a([ ,]|$)'; then
-  ok "arm64-v8a detected"
-elif [ "$UNAME_M" = "aarch64" ]; then
-  ok "aarch64 detected"
+if echo "$ABI64" | grep -qE '(^|[ ,])armv7([ ,]|$)'; then
+  ok "armeabi-v7a detected (abilist64)"
+elif echo "$ABILIST $ABI" | grep -qE '(^|[ ,])armeabi-v7a([ ,]|$)'; then
+  ok "armeabi-v7a detected"
+elif [ "$UNAME_M" = "armv8l" ]; then
+  ok "armv8l detected"
 else
   warn "Unsupported architecture detected"
-  fail "arm64 required (arm64-v8a/aarch64). Detected ABI64='${ABI64:-unknown}' ABI='${ABI:-unknown}' uname='${UNAME_M:-unknown}'"
+  fail "armeabi-v7a required (armeabi-v7a). Detected ABI64='${ABI64:-unknown}' ABI='${ABI:-unknown}' uname='${UNAME_M:-unknown}'"
 fi
 
 zdt_progress 82 "Pre-checks passed"
@@ -246,14 +246,14 @@ fi
 
 zdt_progress 93 "Preparing optional Zygisk component"
 ZYGISK_DIR="$MODDIR/zygisk"
-ZYGISK_SO="$ZYGISK_DIR/arm64-v8a.so"
+ZYGISK_SO="$ZYGISK_DIR/armeabi-v7a.so"
 if [ -f "$ZYGISK_MARKER" ]; then
   ui_print "- Zygisk component: enabled by marker"
   rm -f "$ZYGISK_DIR/unloaded" 2>/dev/null || true
   if [ -f "$ZYGISK_SO" ]; then
     chmod 755 "$ZYGISK_DIR" 2>/dev/null || true
     chmod 644 "$ZYGISK_SO" 2>/dev/null || fail "chmod 644 failed: $ZYGISK_SO"
-    ok "Zygisk arm64-v8a.so found"
+    ok "Zygisk armeabi-v7a.so found"
   else
     fail_code "ZDTD_ZYGISK_LIBRARY_MISSING" "Zygisk marker exists, but library not found: $ZYGISK_SO"
   fi
