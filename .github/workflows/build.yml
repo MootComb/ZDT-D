@@ -25,7 +25,7 @@ env:
   ANDROID_BUILD_TOOLS_VERSION: "36.0.0"
   GRADLE_VERSION: "9.4.1"
   CARGO_PROFILE: release
-  CARGO_BUILD_TARGET: armv7-linux-androideabi
+  CARGO_BUILD_TARGET: armv7a-linux-androideabi
   BUILD_TYPE: ${{ github.event.inputs.build_type || 'Release' }}
   NO_DASHBOARD: "1"
   OPENVPN_VERSION: "2.7.4"
@@ -265,7 +265,7 @@ jobs:
       - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: armv7-linux-androideabi
+          targets: armv7a-linux-androideabi
 
       - name: Install Android NDK cross-linker
         run: |
@@ -279,8 +279,8 @@ jobs:
             NDK_ROOT="$ANDROID_SDK_ROOT/ndk/$(ls "$ANDROID_SDK_ROOT/ndk" | sort -V | tail -1)"
           fi
           NDK_BIN="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
-          ANDROID_CC="$NDK_BIN/armv7-linux-androideabi21-clang"
-          ANDROID_CXX="$NDK_BIN/armv7-linux-androideabi21-clang++"
+          ANDROID_CC="$NDK_BIN/armv7a-linux-androideabi21-clang"
+          ANDROID_CXX="$NDK_BIN/armv7a-linux-androideabi21-clang++"
           ANDROID_AR="$NDK_BIN/llvm-ar"
           ANDROID_RANLIB="$NDK_BIN/llvm-ranlib"
 
@@ -303,7 +303,7 @@ jobs:
 
           mkdir -p ~/.cargo
           cat >> ~/.cargo/config.toml <<EOF2
-          [target.armv7-linux-androideabi]
+          [target.armv7a-linux-androideabi]
           linker = "$ANDROID_CC"
           ar = "$ANDROID_AR"
           EOF2
@@ -315,10 +315,10 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             rust/target
-          key: cargo-zdtd-armv7-linux-androideabi-${{ hashFiles('rust/Cargo.lock', 'rust/zdtd/Cargo.toml') }}
+          key: cargo-zdtd-armv7a-linux-androideabi-${{ hashFiles('rust/Cargo.lock', 'rust/zdtd/Cargo.toml') }}
           restore-keys: |
-            cargo-zdtd-armv7-linux-androideabi-
-            cargo-armv7-linux-androideabi-
+            cargo-zdtd-armv7a-linux-androideabi-
+            cargo-armv7a-linux-androideabi-
 
       - name: Verify Android Rust cross toolchain
         run: |
@@ -378,7 +378,7 @@ jobs:
       - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: armv7-linux-androideabi
+          targets: armv7a-linux-androideabi
 
       - name: Install Android NDK cross-linker
         run: |
@@ -392,8 +392,8 @@ jobs:
             NDK_ROOT="$ANDROID_SDK_ROOT/ndk/$(ls "$ANDROID_SDK_ROOT/ndk" | sort -V | tail -1)"
           fi
           NDK_BIN="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
-          ANDROID_CC="$NDK_BIN/armv7-linux-androideabi21-clang"
-          ANDROID_CXX="$NDK_BIN/armv7-linux-androideabi21-clang++"
+          ANDROID_CC="$NDK_BIN/armv7a-linux-androideabi21-clang"
+          ANDROID_CXX="$NDK_BIN/armv7a-linux-androideabi21-clang++"
           ANDROID_AR="$NDK_BIN/llvm-ar"
           ANDROID_RANLIB="$NDK_BIN/llvm-ranlib"
 
@@ -416,7 +416,7 @@ jobs:
 
           mkdir -p ~/.cargo
           cat >> ~/.cargo/config.toml <<EOF2
-          [target.armv7-linux-androideabi]
+          [target.armv7a-linux-androideabi]
           linker = "$ANDROID_CC"
           ar = "$ANDROID_AR"
           EOF2
@@ -428,10 +428,10 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             rust/target
-          key: cargo-t2s-armv7-linux-androideabi-${{ hashFiles('rust/Cargo.lock', 'rust/T2s/Cargo.toml') }}
+          key: cargo-t2s-armv7a-linux-androideabi-${{ hashFiles('rust/Cargo.lock', 'rust/T2s/Cargo.toml') }}
           restore-keys: |
-            cargo-t2s-armv7-linux-androideabi-
-            cargo-armv7-linux-androideabi-
+            cargo-t2s-armv7a-linux-androideabi-
+            cargo-armv7a-linux-androideabi-
 
       - name: Verify Android Rust cross toolchain
         run: |
@@ -532,8 +532,8 @@ jobs:
             echo "ANDROID_NDK_ROOT=$NDK_ROOT"
             echo "ANDROID_NDK_HOME=$NDK_ROOT"
             echo "PATH=$NDK_BIN:$PATH"
-            echo "OPENVPN_CC=$NDK_BIN/armv7-linux-androideabi${{ env.OPENVPN_ANDROID_API_LEVEL }}-clang"
-            echo "OPENVPN_CXX=$NDK_BIN/armv7-linux-androideabi${{ env.OPENVPN_ANDROID_API_LEVEL }}-clang++"
+            echo "OPENVPN_CC=$NDK_BIN/armv7a-linux-androideabi${{ env.OPENVPN_ANDROID_API_LEVEL }}-clang"
+            echo "OPENVPN_CXX=$NDK_BIN/armv7a-linux-androideabi${{ env.OPENVPN_ANDROID_API_LEVEL }}-clang++"
             echo "OPENVPN_AR=$NDK_BIN/llvm-ar"
             echo "OPENVPN_RANLIB=$NDK_BIN/llvm-ranlib"
             echo "OPENVPN_STRIP=$NDK_BIN/llvm-strip"
@@ -586,7 +586,7 @@ jobs:
           tar -xzf "$SRC/lzo.tar.gz" -C "$BUILD"
           pushd "$BUILD/lzo-${LZO_VERSION}" > /dev/null
           ./configure \
-            --host=armv7-linux-androideabi \
+            --host=armv7a-linux-androideabi \
             --prefix="$PREFIX" \
             --enable-static \
             --disable-shared
@@ -684,7 +684,7 @@ jobs:
           autoreconf -fi
           
           PKG_CONFIG="pkg-config --static" ./configure \
-            --host=armv7-linux-androideabi \
+            --host=armv7a-linux-androideabi \
             --prefix="$PREFIX/openvpn" \
             --with-crypto-library=mbedtls \
             --enable-management \
@@ -767,7 +767,7 @@ jobs:
             echo "ANDROID_NDK_ROOT=$NDK_ROOT"
             echo "ANDROID_NDK_HOME=$NDK_ROOT"
             echo "PATH=$NDK_BIN:$PATH"
-            echo "AMNEZIAWG_CC=$NDK_BIN/armv7-linux-androideabi${{ env.AMNEZIAWG_ANDROID_API_LEVEL }}-clang"
+            echo "AMNEZIAWG_CC=$NDK_BIN/armv7a-linux-androideabi${{ env.AMNEZIAWG_ANDROID_API_LEVEL }}-clang"
             echo "AMNEZIAWG_STRIP=$NDK_BIN/llvm-strip"
           } >> "$GITHUB_ENV"
 
@@ -833,7 +833,7 @@ jobs:
           echo "=== Build amneziawg-go (${AMNEZIAWG_GO_REF}) ==="
           pushd "$SRC/amneziawg-go" > /dev/null
           GOOS=android \
-          GOARCH=armeabi-v7a \
+          GOARCH=arm \
           CGO_ENABLED=0 \
             go build \
               -trimpath \
@@ -930,7 +930,7 @@ jobs:
           echo "=== Build wireproxy (${WIREPROXY_REF}) ==="
           pushd "$SRC/wireproxy" > /dev/null
           GOOS=android \
-          GOARCH=armeabi-v7a \
+          GOARCH=arm \
           CGO_ENABLED=0 \
             go build \
               -trimpath \
@@ -1007,8 +1007,8 @@ jobs:
             echo "ANDROID_NDK_HOME=$NDK_ROOT"
             echo "PATH=$NDK_BIN:$PATH"
             echo "NFQWS_ANDROID_API=21"
-            echo "NFQWS_TARGET=armv7-linux-androideabi"
-            echo "NFQWS_CC=$NDK_BIN/armv7-linux-androideabi21-clang"
+            echo "NFQWS_TARGET=armv7a-linux-androideabi"
+            echo "NFQWS_CC=$NDK_BIN/armv7a-linux-androideabi21-clang"
             echo "NFQWS_AR=$NDK_BIN/llvm-ar"
             echo "NFQWS_RANLIB=$NDK_BIN/llvm-ranlib"
             echo "NFQWS_STRIP=$NDK_BIN/llvm-strip"
@@ -1208,9 +1208,9 @@ jobs:
             echo "ANDROID_NDK_HOME=$NDK_ROOT"
             echo "PATH=$NDK_BIN:$PATH"
             echo "NFQWS2_ANDROID_API=21"
-            echo "NFQWS2_TARGET=armv7-linux-androideabi"
+            echo "NFQWS2_TARGET=armv7a-linux-androideabi"
             echo "NFQWS2_TOOLCHAIN=$TOOLCHAIN"
-            echo "NFQWS2_CC=$NDK_BIN/clang --target=armv7-linux-androideabi21"
+            echo "NFQWS2_CC=$NDK_BIN/clang --target=armv7a-linux-androideabi21"
             echo "NFQWS2_AR=$NDK_BIN/llvm-ar"
             echo "NFQWS2_RANLIB=$NDK_BIN/llvm-ranlib"
             echo "NFQWS2_STRIP=$NDK_BIN/llvm-strip"
@@ -1671,7 +1671,7 @@ jobs:
       - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: armv7-linux-androideabi
+          targets: armv7a-linux-androideabi
 
       - name: Install Android NDK cross-linker
         run: |
@@ -1685,8 +1685,8 @@ jobs:
             NDK_ROOT="$ANDROID_SDK_ROOT/ndk/$(ls "$ANDROID_SDK_ROOT/ndk" | sort -V | tail -1)"
           fi
           NDK_BIN="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
-          ANDROID_CC="$NDK_BIN/armv7-linux-androideabi21-clang"
-          ANDROID_CXX="$NDK_BIN/armv7-linux-androideabi21-clang++"
+          ANDROID_CC="$NDK_BIN/armv7a-linux-androideabi21-clang"
+          ANDROID_CXX="$NDK_BIN/armv7a-linux-androideabi21-clang++"
           ANDROID_AR="$NDK_BIN/llvm-ar"
           ANDROID_RANLIB="$NDK_BIN/llvm-ranlib"
 
@@ -1709,7 +1709,7 @@ jobs:
 
           mkdir -p ~/.cargo
           cat >> ~/.cargo/config.toml <<EOF2
-          [target.armv7-linux-androideabi]
+          [target.armv7a-linux-androideabi]
           linker = "$ANDROID_CC"
           ar = "$ANDROID_AR"
           EOF2
@@ -1721,10 +1721,10 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             rust/target
-          key: cargo-dpi-detector-armv7-linux-androideabi-${{ hashFiles('rust/Cargo.lock', 'rust/dpi-detector/Cargo.toml') }}
+          key: cargo-dpi-detector-armv7a-linux-androideabi-${{ hashFiles('rust/Cargo.lock', 'rust/dpi-detector/Cargo.toml') }}
           restore-keys: |
-            cargo-dpi-detector-armv7-linux-androideabi-
-            cargo-armv7-linux-androideabi-
+            cargo-dpi-detector-armv7a-linux-androideabi-
+            cargo-armv7a-linux-androideabi-
 
       - name: Verify Android Rust cross toolchain
         run: |
@@ -1784,7 +1784,7 @@ jobs:
       - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: armv7-linux-androideabi
+          targets: armv7a-linux-androideabi
 
       - name: Install Android NDK cross-linker
         run: |
@@ -1798,8 +1798,8 @@ jobs:
             NDK_ROOT="$ANDROID_SDK_ROOT/ndk/$(ls "$ANDROID_SDK_ROOT/ndk" | sort -V | tail -1)"
           fi
           NDK_BIN="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
-          ANDROID_CC="$NDK_BIN/armv7-linux-androideabi21-clang"
-          ANDROID_CXX="$NDK_BIN/armv7-linux-androideabi21-clang++"
+          ANDROID_CC="$NDK_BIN/armv7a-linux-androideabi21-clang"
+          ANDROID_CXX="$NDK_BIN/armv7a-linux-androideabi21-clang++"
           ANDROID_AR="$NDK_BIN/llvm-ar"
           ANDROID_RANLIB="$NDK_BIN/llvm-ranlib"
 
@@ -1822,7 +1822,7 @@ jobs:
 
           mkdir -p ~/.cargo
           cat >> ~/.cargo/config.toml <<EOF2
-          [target.armv7-linux-androideabi]
+          [target.armv7a-linux-androideabi]
           linker = "$ANDROID_CC"
           ar = "$ANDROID_AR"
           EOF2
@@ -1834,10 +1834,10 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             rust/target
-          key: cargo-nfqws-tester-armv7-linux-androideabi-${{ hashFiles('rust/Cargo.lock', 'rust/nfqws-tester/Cargo.toml') }}
+          key: cargo-nfqws-tester-armv7a-linux-androideabi-${{ hashFiles('rust/Cargo.lock', 'rust/nfqws-tester/Cargo.toml') }}
           restore-keys: |
-            cargo-nfqws-tester-armv7-linux-androideabi-
-            cargo-armv7-linux-androideabi-
+            cargo-nfqws-tester-armv7a-linux-androideabi-
+            cargo-armv7a-linux-androideabi-
 
       - name: Verify Android Rust cross toolchain
         run: |
