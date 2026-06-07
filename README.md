@@ -4,7 +4,6 @@
 
 </div>
 
-# ⚠️ WARNING
 > [!WARNING]
 > **This is an UNOFFICIAL fork of ZDT-D.**
 >
