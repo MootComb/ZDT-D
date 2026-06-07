@@ -846,7 +846,6 @@ jobs:
           GOARM=7 \
           CGO_ENABLED=1 \
           CC=$NDK_BIN/armv7a-linux-androideabi24-clang \
-          CGO_CFLAGS="-D__ANDROID_API__=24" \
             go build \
               -trimpath \
               -ldflags="-s -w -buildid=" \
@@ -924,9 +923,26 @@ jobs:
           go-version: '1.24.4'
           cache: false
 
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK
+        run: |
+          set -euo pipefail
+          NDK_VERSION="27.2.12479018"
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager "ndk;$NDK_VERSION"
+          NDK_ROOT="$ANDROID_SDK_ROOT/ndk/$NDK_VERSION"
+          if [[ ! -d "$NDK_ROOT" ]]; then
+            echo "::warning::Expected NDK not found at $NDK_ROOT, falling back to latest installed NDK"
+            NDK_ROOT="$ANDROID_SDK_ROOT/ndk/$(ls "$ANDROID_SDK_ROOT/ndk" | sort -V | tail -1)"
+          fi
+          NDK_BIN="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          echo "NDK_ROOT=$NDK_ROOT" >> "$GITHUB_ENV"
+          echo "NDK_BIN=$NDK_BIN" >> "$GITHUB_ENV"
+          echo "PATH=$NDK_BIN:$PATH" >> "$GITHUB_ENV"
+
       - name: Build wireproxy from official source
-        env:
-          NDK_BIN: ${{ env.NDK_ROOT }}/toolchains/llvm/prebuilt/linux-x86_64/bin
         run: |
           set -euo pipefail
 
@@ -949,7 +965,6 @@ jobs:
           GOOS=android \
           GOARCH=arm \
           GOARM=7 \
-          CGO_CFLAGS="-D__ANDROID_API__=24" \
             go build \
               -trimpath \
               -ldflags="-s -w -buildid=" \
