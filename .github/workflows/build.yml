@@ -1281,7 +1281,7 @@ jobs:
           test -d "$luajitdir" || { echo "::error::LuaJIT source directory not found"; exit 1; }
           pushd "$luajitdir" > /dev/null
           make \
-      HOST_CC="gcc -m32" \
+            HOST_CC="gcc -m32" \
             BUILDMODE=static \
             XCFLAGS="-DLUAJIT_DISABLE_FFI" \
             HOST_CC="cc" \
