@@ -517,11 +517,14 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             autoconf \
             automake \
+      HOST_CC="gcc -m32" \
             bzip2 \
             cmake \
+      HOST_CC="gcc -m32" \
             file \
             libtool \
             make \
+      HOST_CC="gcc -m32" \
             pkg-config \
             xz-utils
 
@@ -857,6 +860,7 @@ jobs:
           export CFLAGS="-O3 -fPIE"
           export LDFLAGS="-pie"
           make \
+      HOST_CC="gcc -m32" \
             V=1 \
             PLATFORM=linux \
             CC="$AMNEZIAWG_CC" \
@@ -989,11 +993,13 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             autoconf \
             automake \
+      HOST_CC="gcc -m32" \
             bzip2 \
             curl \
             file \
             libtool \
             make \
+      HOST_CC="gcc -m32" \
             pkg-config \
             python3 \
             xz-utils \
@@ -1186,12 +1192,14 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             autoconf \
             automake \
+      HOST_CC="gcc -m32" \
             bzip2 \
             curl \
             file \
             gcc-multilib \
             libtool \
             make \
+      HOST_CC="gcc -m32" \
             patch \
             pkg-config \
             python3 \
@@ -1280,6 +1288,7 @@ jobs:
           test -d "$luajitdir" || { echo "::error::LuaJIT source directory not found"; exit 1; }
           pushd "$luajitdir" > /dev/null
           make \
+      HOST_CC="gcc -m32" \
             BUILDMODE=static \
             XCFLAGS="-DLUAJIT_DISABLE_FFI" \
             HOST_CC="cc" \
