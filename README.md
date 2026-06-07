@@ -4,14 +4,14 @@
 
 </div>
 
+# ⚠️ WARNING
 > [!WARNING]
-> A modified version of this project is being distributed on the internet.
+> **This is an UNOFFICIAL fork of ZDT-D.**
 >
-> **Do not download it, do not install it, and never grant root access to unknown builds.**
+> - **ARMv7 only** — works only on armeabi-v7a devices
+> - **Can run without Magisk** — direct daemon execution is possible
 >
-> Warn people close to you. This is very important: your data may be stolen.
->
-> Download ZDT-D only from the official GitHub repository.
+> **Use at your own risk. Download only from this repository. Never grant root access to unknown builds.**
 
 <p align="center">
   <a href="README.md"><b>English</b></a> ·
