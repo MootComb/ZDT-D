@@ -2083,8 +2083,6 @@ jobs:
           ZDT_KEY_ALIAS: ${{ secrets.ZDT_KEY_ALIAS }}
           ZDT_KEY_PASSWORD: ${{ secrets.ZDT_KEY_PASSWORD }}
         run: |
-          set -euo pipefail
-
           echo "sdk.dir=$ANDROID_SDK_ROOT" > "$GRADLE_PROJECT_DIR/local.properties"
 
           for name in ZDT_KEYSTORE_BASE64 ZDT_KEYSTORE_PASSWORD ZDT_KEY_ALIAS ZDT_KEY_PASSWORD; do
