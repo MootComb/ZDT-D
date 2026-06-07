@@ -782,6 +782,7 @@ jobs:
       - name: Build AmneziaWG from official sources
         env:
           ANDROID_API: ${{ env.AMNEZIAWG_ANDROID_API_LEVEL }}
+          NDK_BIN: ${{ env.NDK_ROOT }}/toolchains/llvm/prebuilt/linux-x86_64/bin
         run: |
           set -euo pipefail
 
@@ -940,10 +941,12 @@ jobs:
 
           echo "=== Build wireproxy (${WIREPROXY_REF}) ==="
           pushd "$SRC/wireproxy" > /dev/null
+          CC=$NDK_BIN/armv7a-linux-androideabi24-clang \
+          CXX=$NDK_BIN/armv7a-linux-androideabi24-clang++ \
+          CGO_ENABLED=1 \
           GOOS=android \
           GOARCH=arm \
           GOARM=7 \
-          CGO_ENABLED=1 \
           CGO_CFLAGS="-D__ANDROID_API__=24" \
             go build \
               -trimpath \
