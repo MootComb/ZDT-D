@@ -60,7 +60,7 @@ import com.android.zdtd.service.RootState
 import com.android.zdtd.service.SetupUiState
 
 private fun isArmeabiV7aOnlySupported(): Boolean {
-  return Build.SUPPORTED_ABIS.any { it == "armeabi-v7a" || it == "armeabi-v7a-v8a" }
+  return Build.SUPPORTED_ABIS.any { it == "armeabi-v7a" || it == "armv8l" }
 }
 
 private fun isModuleInstallOsSupported(): Boolean {

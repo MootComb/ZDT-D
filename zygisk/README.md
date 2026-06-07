@@ -1,6 +1,6 @@
 # ZDT-D Zygisk native layer
 
-This directory contains the source code for the ZDT-D Zygisk `arm64-v8a.so` module.
+This directory contains the source code for the ZDT-D Zygisk `armeabi-v7a.so` module.
 
 ## Build
 
@@ -13,7 +13,7 @@ Default checked build:
 Default output:
 
 ```text
-out/arm64-v8a.so
+out/armeabi-v7a.so
 ```
 
 Build directly into the Magisk module layout:
@@ -25,13 +25,13 @@ Build directly into the Magisk module layout:
 Module output:
 
 ```text
-zygisk/arm64-v8a.so
+zygisk/armeabi-v7a.so
 ```
 
 You can also pass an explicit output path:
 
 ```bash
-./build.sh /path/to/arm64-v8a.so
+./build.sh /path/to/armeabi-v7a.so
 ```
 
 `build.sh` validates that `zygisk_module_entry` is exported and that the output does not depend on `libc++`/`libstdc++`.

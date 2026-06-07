@@ -1,0 +1,14 @@
+{
+  "protector_mode": "on",
+  "hotspot_t2s_enabled": false,
+  "hotspot_mode": "proxy",
+  "hotspot_program": "",
+  "hotspot_profile": "",
+  "hotspot_t2s_target": "",
+  "hotspot_t2s_singbox_profile": "",
+  "hotspot_t2s_wireproxy_profile": "",
+  "hotspot_t2s_capture_all": false,
+  "allow_loopback_redirect": false,
+  "selinux_permissive_enabled": false,
+  "ip_forward_enabled": false
+}
