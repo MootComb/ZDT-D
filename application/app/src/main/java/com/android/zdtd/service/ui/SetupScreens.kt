@@ -59,9 +59,8 @@ import com.android.zdtd.service.R
 import com.android.zdtd.service.RootState
 import com.android.zdtd.service.SetupUiState
 
-private fun isarmeabi-v7aOnlySupported(): Boolean {
-  // Module binaries are built for armeabi-v7a-v8a only.
-  return Build.SUPPORTED_ABIS.any { it == "armeabi-v7a-v8a" }
+private fun isArmeabiV7aOnlySupported(): Boolean {
+  return Build.SUPPORTED_ABIS.any { it == "armeabi-v7a" || it == "armeabi-v7a-v8a" }
 }
 
 private fun isModuleInstallOsSupported(): Boolean {
@@ -121,7 +120,7 @@ private fun SetupAlertDialog(
 
 @Composable
 fun WelcomeScreen(onAccept: () -> Unit) {
-  val armeabi-v7aOk = remember { isarmeabi-v7aOnlySupported() }
+  val armeabiV7aOk = remember { isArmeabiV7aOnlySupported() }
   val screenPadding = rememberAdaptiveScreenPadding()
   SetupScaffold { padding ->
     SetupScreenBackground(padding = padding) {
@@ -161,7 +160,7 @@ fun WelcomeScreen(onAccept: () -> Unit) {
           text = stringResource(R.string.common_continue),
         )
 
-        if (!armeabi-v7aOk) {
+        if (!armeabiV7aOk) {
           SetupInfoCard(
             title = stringResource(R.string.common_attention),
             body = stringResource(
@@ -178,7 +177,7 @@ fun WelcomeScreen(onAccept: () -> Unit) {
 
 @Composable
 fun RootInfoScreen(rootState: RootState, onRequest: () -> Unit) {
-  val armeabi-v7aOk = remember { isarmeabi-v7aOnlySupported() }
+  val armeabiV7aOk = remember { isArmeabiV7aOnlySupported() }
   val screenPadding = rememberAdaptiveScreenPadding()
   SetupScaffold { padding ->
     SetupScreenBackground(padding = padding) {
@@ -215,7 +214,7 @@ fun RootInfoScreen(rootState: RootState, onRequest: () -> Unit) {
               text = stringResource(R.string.setup_request_root),
             )
 
-            if (!armeabi-v7aOk) {
+            if (!armeabiV7aOk) {
               SetupInfoCard(
                 title = stringResource(R.string.common_attention),
                 body = stringResource(
@@ -313,7 +312,7 @@ fun InstallModuleScreen(
   onDismissMetamoduleInstallBlocked: () -> Unit,
   onRetryInstallWithoutZygisk: () -> Unit,
 ) {
-  val armeabi-v7aOk = remember { isarmeabi-v7aOnlySupported() }
+  val armeabiV7aOk = remember { isArmeabiV7aOnlySupported() }
   val compact = rememberIsCompactWidth()
   val screenPadding = rememberAdaptiveScreenPadding()
   var showInstallLog by rememberSaveable(setup.installing, setup.installLog, setup.installOk, setup.installError, setup.manualZipSaved) { androidx.compose.runtime.mutableStateOf(false) }
@@ -335,7 +334,7 @@ fun InstallModuleScreen(
     onRefreshConflicts()
     onRefreshZygiskInstallMarker()
   }
-  if (armeabi-v7aOk && setup.showManualDialog) {
+  if (armeabiV7aOk && setup.showManualDialog) {
     val extra = if (setup.oldVersionDetected) {
       "\n\n" + stringResource(R.string.setup_manual_old_version_extra)
     } else {
@@ -575,7 +574,7 @@ fun InstallModuleScreen(
           )
         }
 
-        if (!armeabi-v7aOk) {
+        if (!armeabiV7aOk) {
           Spacer(Modifier.height(10.dp))
           Text(
             text = stringResource(

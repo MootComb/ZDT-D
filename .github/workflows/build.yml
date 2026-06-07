@@ -41,10 +41,6 @@ env:
   AMNEZIAWG_UAPI_SOCKET_DIR: "/data/adb/modules/ZDT-D/working_folder/amneziawg/run/amneziawg"
   AMNEZIAWG_GO_UAPI_SOCKET_DIR: "run/amneziawg"
   WIREPROXY_REF: "v1.1.2"
-  ZDT_KEYSTORE_BASE64: ${{ secrets.ZDT_KEYSTORE_BASE64 }}
-  ZDT_KEYSTORE_PASSWORD: ${{ secrets.ZDT_KEYSTORE_PASSWORD }}
-  ZDT_KEY_ALIAS: ${{ secrets.ZDT_KEY_ALIAS }}
-  ZDT_KEY_PASSWORD: ${{ secrets.ZDT_KEY_PASSWORD }}
 
 permissions:
   contents: write
@@ -2081,34 +2077,41 @@ jobs:
           test -s out/module/zdt_module.zip || { echo "::error::Downloaded module zip is missing"; exit 1; }
 
       - name: Write local.properties & restore signing keystore
+        env:
+          ZDT_KEYSTORE_BASE64: ${{ secrets.ZDT_KEYSTORE_BASE64 }}
+          ZDT_KEYSTORE_PASSWORD: ${{ secrets.ZDT_KEYSTORE_PASSWORD }}
+          ZDT_KEY_ALIAS: ${{ secrets.ZDT_KEY_ALIAS }}
+          ZDT_KEY_PASSWORD: ${{ secrets.ZDT_KEY_PASSWORD }}
         run: |
+          set -euo pipefail
+
           echo "sdk.dir=$ANDROID_SDK_ROOT" > "$GRADLE_PROJECT_DIR/local.properties"
 
-          # for name in ZDT_KEYSTORE_BASE64 ZDT_KEYSTORE_PASSWORD ZDT_KEY_ALIAS ZDT_KEY_PASSWORD; do
-          #   if [[ -z "${!name:-}" ]]; then
-          #     echo "::error::$name GitHub Actions secret is missing or empty"
-          #     exit 1
-          #   fi
-          # done
+          for name in ZDT_KEYSTORE_BASE64 ZDT_KEYSTORE_PASSWORD ZDT_KEY_ALIAS ZDT_KEY_PASSWORD; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::$name GitHub Actions secret is missing or empty"
+              exit 1
+            fi
+          done
 
-          # KEYSTORE_PATH="$(pwd)/keystores/zdt-debug.keystore"
-          # mkdir -p "$(dirname "$KEYSTORE_PATH")"
+          KEYSTORE_PATH="$(pwd)/keystores/zdt-debug.keystore"
+          mkdir -p "$(dirname "$KEYSTORE_PATH")"
 
-          # printf '%s' "$ZDT_KEYSTORE_BASE64" | base64 -d > "$KEYSTORE_PATH"
-          # chmod 600 "$KEYSTORE_PATH"
+          printf '%s' "$ZDT_KEYSTORE_BASE64" | base64 -d > "$KEYSTORE_PATH"
+          chmod 600 "$KEYSTORE_PATH"
 
-          # keytool -list \
-          #   -keystore "$KEYSTORE_PATH" \
-          #   -storepass "$ZDT_KEYSTORE_PASSWORD" \
-          #   -alias "$ZDT_KEY_ALIAS" \
-          #   >/dev/null
+          keytool -list \
+            -keystore "$KEYSTORE_PATH" \
+            -storepass "$ZDT_KEYSTORE_PASSWORD" \
+            -alias "$ZDT_KEY_ALIAS" \
+            >/dev/null
 
-          # {
-          #   echo "storeFile=$KEYSTORE_PATH"
-          #   echo "storePassword=$ZDT_KEYSTORE_PASSWORD"
-          #   echo "keyAlias=$ZDT_KEY_ALIAS"
-          #   echo "keyPassword=$ZDT_KEY_PASSWORD"
-          # } > "$GRADLE_PROJECT_DIR/keystore.properties"
+          {
+            echo "storeFile=$KEYSTORE_PATH"
+            echo "storePassword=$ZDT_KEYSTORE_PASSWORD"
+            echo "keyAlias=$ZDT_KEY_ALIAS"
+            echo "keyPassword=$ZDT_KEY_PASSWORD"
+          } > "$GRADLE_PROJECT_DIR/keystore.properties"
 
       - name: Prepare dpi-detector APK asset
         run: |
