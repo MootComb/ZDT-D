@@ -3,7 +3,7 @@ name: Build ZDT-D
 on:
   push:
     branches:
-      - main
+      - armv7
   workflow_dispatch:
     inputs:
       build_type:
@@ -2198,7 +2198,7 @@ jobs:
     needs:
       - build_gate
       - build_apk
-    if: github.ref == 'refs/heads/main' && needs.build_apk.result == 'success'
+    if: github.ref == 'refs/heads/armv7' && needs.build_apk.result == 'success'
 
     steps:
       - name: Checkout repository
@@ -2253,7 +2253,7 @@ jobs:
           REPO_URL="https://github.com/${{ github.repository }}"
           RUN_URL="${REPO_URL}/actions/runs/${{ github.run_id }}"
           BUILD_TYPE="${{ env.BUILD_TYPE }}"
-          BRANCH_NAME="${GITHUB_REF_NAME:-main}"
+          BRANCH_NAME="${GITHUB_REF_NAME:-armv7}"
 
           git fetch --tags --force >/dev/null 2>&1 || true
 
