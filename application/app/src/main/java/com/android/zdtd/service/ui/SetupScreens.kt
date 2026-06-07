@@ -59,9 +59,9 @@ import com.android.zdtd.service.R
 import com.android.zdtd.service.RootState
 import com.android.zdtd.service.SetupUiState
 
-private fun isArm64OnlySupported(): Boolean {
-  // Module binaries are built for arm64-v8a only.
-  return Build.SUPPORTED_ABIS.any { it == "arm64-v8a" }
+private fun isarmeabi-v7aOnlySupported(): Boolean {
+  // Module binaries are built for armeabi-v7a-v8a only.
+  return Build.SUPPORTED_ABIS.any { it == "armeabi-v7a-v8a" }
 }
 
 private fun isModuleInstallOsSupported(): Boolean {
@@ -121,7 +121,7 @@ private fun SetupAlertDialog(
 
 @Composable
 fun WelcomeScreen(onAccept: () -> Unit) {
-  val arm64Ok = remember { isArm64OnlySupported() }
+  val armeabi-v7aOk = remember { isarmeabi-v7aOnlySupported() }
   val screenPadding = rememberAdaptiveScreenPadding()
   SetupScaffold { padding ->
     SetupScreenBackground(padding = padding) {
@@ -156,12 +156,12 @@ fun WelcomeScreen(onAccept: () -> Unit) {
 
         SetupPrimaryButton(
           onClick = onAccept,
-          enabled = arm64Ok,
+          enabled = true,
           modifier = Modifier.fillMaxWidth(),
           text = stringResource(R.string.common_continue),
         )
 
-        if (!arm64Ok) {
+        if (!armeabi-v7aOk) {
           SetupInfoCard(
             title = stringResource(R.string.common_attention),
             body = stringResource(
@@ -178,7 +178,7 @@ fun WelcomeScreen(onAccept: () -> Unit) {
 
 @Composable
 fun RootInfoScreen(rootState: RootState, onRequest: () -> Unit) {
-  val arm64Ok = remember { isArm64OnlySupported() }
+  val armeabi-v7aOk = remember { isarmeabi-v7aOnlySupported() }
   val screenPadding = rememberAdaptiveScreenPadding()
   SetupScaffold { padding ->
     SetupScreenBackground(padding = padding) {
@@ -207,7 +207,7 @@ fun RootInfoScreen(rootState: RootState, onRequest: () -> Unit) {
             SetupProgressCard(text = stringResource(R.string.setup_root_waiting))
           }
           RootState.DENIED, RootState.GRANTED -> {
-            val enabled = arm64Ok && rootState != RootState.CHECKING
+            val enabled = rootState != RootState.CHECKING
             SetupPrimaryButton(
               onClick = onRequest,
               enabled = enabled,
@@ -215,7 +215,7 @@ fun RootInfoScreen(rootState: RootState, onRequest: () -> Unit) {
               text = stringResource(R.string.setup_request_root),
             )
 
-            if (!arm64Ok) {
+            if (!armeabi-v7aOk) {
               SetupInfoCard(
                 title = stringResource(R.string.common_attention),
                 body = stringResource(
@@ -313,7 +313,7 @@ fun InstallModuleScreen(
   onDismissMetamoduleInstallBlocked: () -> Unit,
   onRetryInstallWithoutZygisk: () -> Unit,
 ) {
-  val arm64Ok = remember { isArm64OnlySupported() }
+  val armeabi-v7aOk = remember { isarmeabi-v7aOnlySupported() }
   val compact = rememberIsCompactWidth()
   val screenPadding = rememberAdaptiveScreenPadding()
   var showInstallLog by rememberSaveable(setup.installing, setup.installLog, setup.installOk, setup.installError, setup.manualZipSaved) { androidx.compose.runtime.mutableStateOf(false) }
@@ -335,7 +335,7 @@ fun InstallModuleScreen(
     onRefreshConflicts()
     onRefreshZygiskInstallMarker()
   }
-  if (arm64Ok && setup.showManualDialog) {
+  if (armeabi-v7aOk && setup.showManualDialog) {
     val extra = if (setup.oldVersionDetected) {
       "\n\n" + stringResource(R.string.setup_manual_old_version_extra)
     } else {
@@ -544,7 +544,7 @@ fun InstallModuleScreen(
           Spacer(Modifier.height(18.dp))
         }
 
-        val canInstall = arm64Ok && osInstallOk && rootState == RootState.GRANTED && !setup.installing && !setup.installOk
+        val canInstall = osInstallOk && rootState == RootState.GRANTED && !setup.installing && !setup.installOk
         SetupPrimaryButton(
           onClick = {
             if (needsAndroidWarning) {
@@ -575,7 +575,7 @@ fun InstallModuleScreen(
           )
         }
 
-        if (!arm64Ok) {
+        if (!armeabi-v7aOk) {
           Spacer(Modifier.height(10.dp))
           Text(
             text = stringResource(

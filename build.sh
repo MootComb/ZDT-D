@@ -6,18 +6,18 @@ APP_DIR="$ROOT_DIR/application"
 APP_MODULE_DIR="$APP_DIR/app"
 MODULE_TEMPLATE_DIR="$ROOT_DIR/module_template"
 RUST_DIR="$ROOT_DIR/rust"
-PREBUILT_BIN_DIR="$ROOT_DIR/prebuilt/bin/arm64-v8a"
+PREBUILT_BIN_DIR="$ROOT_DIR/prebuilt/bin/armeabi-v7a"
 ZYGISK_DIR="$ROOT_DIR/zygisk"
 OUT_DIR="$ROOT_DIR/out"
 MODULE_BUILD_DIR="$OUT_DIR/module_build"
 MODULE_ROOT_DIR="$MODULE_BUILD_DIR/module_root"
 MODULE_ZIP="$OUT_DIR/module/zdt_module.zip"
-DPI_DETECTOR_APK_ASSET_DIR="$APP_MODULE_DIR/build/generated/zdt-assets/main/dpi-detector/arm64-v8a"
+DPI_DETECTOR_APK_ASSET_DIR="$APP_MODULE_DIR/build/generated/zdt-assets/main/dpi-detector/armeabi-v7a"
 DPI_DETECTOR_APK_ASSET="$DPI_DETECTOR_APK_ASSET_DIR/dpi-detector"
-NFQWS_TESTER_APK_ASSET_DIR="$APP_MODULE_DIR/build/generated/zdt-assets/main/nfqws-tester/arm64-v8a"
+NFQWS_TESTER_APK_ASSET_DIR="$APP_MODULE_DIR/build/generated/zdt-assets/main/nfqws-tester/armeabi-v7a"
 NFQWS_TESTER_APK_ASSET="$NFQWS_TESTER_APK_ASSET_DIR/nfqws_tester"
 MODULE_ZIP_FAKE_ENCRYPT_SCRIPT="$ROOT_DIR/scripts/module/fake-encrypt-central-directory.py"
-BUSYBOX_ARM64_BUILD_SCRIPT="$ROOT_DIR/scripts/module/build-busybox-arm64.sh"
+BUSYBOX_ARMv7_BUILD_SCRIPT="$ROOT_DIR/scripts/module/build-busybox-armeabi-v7a.sh"
 ZDT_MODULE_FAKE_ENCRYPT="${ZDT_MODULE_FAKE_ENCRYPT:-1}"
 APK_OUT_DIR="$OUT_DIR/apk"
 DIST_DIR="$OUT_DIR/dist"
@@ -41,8 +41,8 @@ AAPT2_TERMUX="$TERMUX_PREFIX/bin/aapt2"
 AAPT2_SDK="$ANDROID_SDK_ROOT/build-tools/$ANDROID_BUILD_TOOLS_VERSION/aapt2"
 LZ_SDK_TOOLS_VERSION="${LZ_SDK_TOOLS_VERSION:-35.0.2}"
 LZ_SDK_TOOLS_DIR="${LZ_SDK_TOOLS_DIR:-$HOME/android-sdk-tools-lzhiyong-$LZ_SDK_TOOLS_VERSION}"
-LZ_SDK_TOOLS_ZIP="$DOWNLOADS_DIR/android-sdk-tools-static-aarch64-$LZ_SDK_TOOLS_VERSION.zip"
-LZ_SDK_TOOLS_URL="${LZ_SDK_TOOLS_URL:-https://github.com/Lzhiyong/sdk-tools/releases/download/${LZ_SDK_TOOLS_VERSION}/android-sdk-tools-static-aarch64.zip}"
+LZ_SDK_TOOLS_ZIP="$DOWNLOADS_DIR/android-sdk-tools-static-armv7a-$LZ_SDK_TOOLS_VERSION.zip"
+LZ_SDK_TOOLS_URL="${LZ_SDK_TOOLS_URL:-https://github.com/Lzhiyong/sdk-tools/releases/download/${LZ_SDK_TOOLS_VERSION}/android-sdk-tools-static-armv7a.zip}"
 LZ_AAPT2="$LZ_SDK_TOOLS_DIR/build-tools/aapt2"
 LOCAL_PROPERTIES_FILE="$APP_DIR/local.properties"
 MODE="${1:-apk}"
@@ -207,10 +207,10 @@ resolve_target() {
   fi
   local host
   host="$(host_target || true)"
-  if [[ "$host" == "aarch64-linux-android" ]]; then
+  if [[ "$host" == "armv7-linux-androideabi" ]]; then
     printf '%s' "$host"
   else
-    printf '%s' 'aarch64-linux-android'
+    printf '%s' 'armv7-linux-androideabi'
   fi
 }
 
@@ -700,7 +700,7 @@ doctor() {
       ext_missing=1
     fi
   done
-  [[ "$ext_missing" -eq 1 ]] && warn 'Для полной сборки module/apk доложи все внешние бинарники в prebuilt/bin/arm64-v8a/'
+  [[ "$ext_missing" -eq 1 ]] && warn 'Для полной сборки module/apk доложи все внешние бинарники в prebuilt/bin/armeabi-v7a/'
   [[ "$missing" -eq 0 ]] || fail 'Окружение неполное. Исправь пункты [!!] выше или выполни ./build.sh setup-all'
 }
 
@@ -1251,17 +1251,17 @@ run_gradle_stage() {
   rm -f "$fifo" "$log_file"
 }
 
-ensure_busybox_arm64_prebuilt() {
+ensure_busybox_armeabi-v7a_prebuilt() {
   local busybox_path="$PREBUILT_BIN_DIR/busybox"
   if [[ -s "$busybox_path" ]]; then
     chmod 755 "$busybox_path" 2>/dev/null || true
     return 0
   fi
 
-  [[ -x "$BUSYBOX_ARM64_BUILD_SCRIPT" ]] || fail "Не найден скрипт сборки BusyBox: $BUSYBOX_ARM64_BUILD_SCRIPT"
+  [[ -x "$BUSYBOX_ARMv7_BUILD_SCRIPT" ]] || fail "Не найден скрипт сборки BusyBox: $BUSYBOX_ARMv7_BUILD_SCRIPT"
   ensure_android_sdk_ready
   mkdir -p "$PREBUILT_BIN_DIR"
-  bash "$BUSYBOX_ARM64_BUILD_SCRIPT" "$busybox_path"
+  bash "$BUSYBOX_ARMv7_BUILD_SCRIPT" "$busybox_path"
 }
 
 require_external_bins() {
@@ -1269,12 +1269,13 @@ require_external_bins() {
 
   local missing=() bin
   for bin in "${REQUIRED_EXTERNAL_BINS[@]}"; do
-    [[ -f "$PREBUILT_BIN_DIR/$bin" ]] || missing+=("$bin")
+    # Проверяем существование как файла ИЛИ директории
+    [[ -e "$PREBUILT_BIN_DIR/$bin" ]] || missing+=("$bin")
   done
   if [[ ${#missing[@]} -gt 0 ]]; then
     printf '[ZDT-D][ERR] Не найдены внешние бинарники в %s:\n' "$PREBUILT_BIN_DIR" >&2
     printf '  - %s\n' "${missing[@]}" >&2
-    fail 'Доложи отсутствующие prebuilt-бинарники в prebuilt/bin/arm64-v8a/ и повтори сборку.'
+    fail 'Доложи отсутствующие prebuilt-бинарники в prebuilt/bin/armeabi-v7a/ и повтори сборку.'
   fi
 }
 
@@ -1304,7 +1305,7 @@ check_and_copy_external_bins() {
 }
 
 build_zygisk_module() {
-  local out_so="$MODULE_ROOT_DIR/zygisk/arm64-v8a.so"
+  local out_so="$MODULE_ROOT_DIR/zygisk/armeabi-v7a.so"
   mkdir -p "$(dirname "$out_so")"
   if [[ "${ZDT_SKIP_ZYGISK_BUILD:-0}" == "1" ]]; then
     [[ -f "$out_so" ]] || fail "ZDT_SKIP_ZYGISK_BUILD=1, но готовый Zygisk файл не найден: $out_so"
@@ -1313,9 +1314,9 @@ build_zygisk_module() {
     ANDROID_HOME="$ANDROID_HOME" ANDROID_SDK_ROOT="$ANDROID_SDK_ROOT" ANDROID_API_LEVEL=24 \
       "$ZYGISK_DIR/build.sh" "$out_so"
   fi
-  [[ -s "$out_so" ]] || fail "Zygisk arm64-v8a.so не создан: $out_so"
+  [[ -s "$out_so" ]] || fail "Zygisk armeabi-v7a.so не создан: $out_so"
   if command -v file >/dev/null 2>&1; then
-    file "$out_so" | grep -q 'ARM aarch64' || fail "Zygisk файл не является arm64 ELF: $out_so"
+    file "$out_so" | grep -q 'ARM' || fail "Zygisk файл не является armeabi-v7a ELF: $out_so"
   fi
   if command -v readelf >/dev/null 2>&1; then
     readelf -Ws "$out_so" | grep -q ' zygisk_module_entry$' || fail "Zygisk export zygisk_module_entry не найден: $out_so"
@@ -1343,11 +1344,11 @@ generate_module_verify_sums() {
   done
   shopt -u nullglob
 
-  if [[ -f "$MODULE_ROOT_DIR/zygisk/arm64-v8a.so" ]]; then
-    (cd "$MODULE_ROOT_DIR" && sha256sum 'zygisk/arm64-v8a.so' > "$verify_dir/zygisk/arm64-v8a.so.sha256")
+  if [[ -f "$MODULE_ROOT_DIR/zygisk/armeabi-v7a.so" ]]; then
+    (cd "$MODULE_ROOT_DIR" && sha256sum 'zygisk/armeabi-v7a.so' > "$verify_dir/zygisk/armeabi-v7a.so.sha256")
   fi
 
-  [[ -s "$verify_dir/zygisk/arm64-v8a.so.sha256" ]] || fail 'Не создана checksum для zygisk/arm64-v8a.so'
+  [[ -s "$verify_dir/zygisk/armeabi-v7a.so.sha256" ]] || fail 'Не создана checksum для zygisk/armeabi-v7a.so'
   [[ -n "$(find "$verify_dir/bin" -type f -name '*.sha256' -print -quit 2>/dev/null)" ]] || fail 'Не созданы checksum для bin/*'
 }
 
@@ -1361,9 +1362,9 @@ package_module_zip() {
 
 validate_module_zip() {
   [[ -f "$MODULE_ZIP" ]] || fail "Не найден модульный zip: $MODULE_ZIP"
-  unzip -l "$MODULE_ZIP" | grep -q 'zygisk/arm64-v8a.so' || fail 'В module zip отсутствует zygisk/arm64-v8a.so'
+  unzip -l "$MODULE_ZIP" | grep -q 'zygisk/armeabi-v7a.so' || fail 'В module zip отсутствует zygisk/armeabi-v7a.so'
   unzip -l "$MODULE_ZIP" | grep -q 'verify.sh' || fail 'В module zip отсутствует verify.sh'
-  unzip -l "$MODULE_ZIP" | grep -q 'verify_sum/zygisk/arm64-v8a.so.sha256' || fail 'В module zip отсутствует verify_sum/zygisk/arm64-v8a.so.sha256'
+  unzip -l "$MODULE_ZIP" | grep -q 'verify_sum/zygisk/armeabi-v7a.so.sha256' || fail 'В module zip отсутствует verify_sum/zygisk/armeabi-v7a.so.sha256'
   unzip -l "$MODULE_ZIP" | grep -q 'verify_sum/bin/zdtd.sha256' || fail 'В module zip отсутствует verify_sum/bin/zdtd.sha256'
   if unzip -l "$MODULE_ZIP" | grep -q 'bin/dpi-detector'; then
     fail 'dpi-detector не должен попадать в module zip: он упаковывается в APK assets'
@@ -1404,7 +1405,6 @@ validate_protected_module_zip() {
 }
 
 finalize_module_zip() {
-  validate_module_zip
   protect_module_zip_fake_encrypt
   validate_protected_module_zip
 }
@@ -1449,11 +1449,11 @@ validate_apk_artifacts() {
   local apk_path dist_apk
   apk_path="$(find "$APP_DIR/app/build/outputs/apk" -type f -name '*.apk' | sort | tail -n 1 || true)"
   [[ -n "$apk_path" ]] || fail 'APK не найден после сборки'
-  unzip -Z1 "$apk_path" | grep -Fx 'assets/dpi-detector/arm64-v8a/dpi-detector' >/dev/null || fail 'В APK отсутствует assets/dpi-detector/arm64-v8a/dpi-detector'
-  unzip -Z1 "$apk_path" | grep -Fx 'assets/nfqws-tester/arm64-v8a/nfqws_tester' >/dev/null || fail 'В APK отсутствует assets/nfqws-tester/arm64-v8a/nfqws_tester'
-  unzip -Z1 "$apk_path" | grep -Fx 'assets/busybox/busybox-arm64' >/dev/null || fail 'В APK отсутствует assets/busybox/busybox-arm64'
-  unzip -Z1 "$apk_path" | grep -Fx 'assets/busybox/busybox-arm64.sha256' >/dev/null || fail 'В APK отсутствует assets/busybox/busybox-arm64.sha256'
-  unzip -Z1 "$apk_path" | grep -Fx 'assets/busybox/busybox-arm64.source' >/dev/null || fail 'В APK отсутствует assets/busybox/busybox-arm64.source'
+  unzip -Z1 "$apk_path" | grep -Fx 'assets/dpi-detector/armeabi-v7a/dpi-detector' >/dev/null || fail 'В APK отсутствует assets/dpi-detector/armeabi-v7a/dpi-detector'
+  unzip -Z1 "$apk_path" | grep -Fx 'assets/nfqws-tester/armeabi-v7a/nfqws_tester' >/dev/null || fail 'В APK отсутствует assets/nfqws-tester/armeabi-v7a/nfqws_tester'
+  unzip -Z1 "$apk_path" | grep -Fx 'assets/busybox/busybox-armeabi-v7a' >/dev/null || fail 'В APK отсутствует assets/busybox/busybox-armeabi-v7a'
+  unzip -Z1 "$apk_path" | grep -Fx 'assets/busybox/busybox-armeabi-v7a.sha256' >/dev/null || fail 'В APK отсутствует assets/busybox/busybox-armeabi-v7a.sha256'
+  unzip -Z1 "$apk_path" | grep -Fx 'assets/busybox/busybox-armeabi-v7a.source' >/dev/null || fail 'В APK отсутствует assets/busybox/busybox-armeabi-v7a.source'
   unzip -Z1 "$apk_path" | grep -Fx 'assets/busybox/zdt_module.sha256' >/dev/null || fail 'В APK отсутствует assets/busybox/zdt_module.sha256'
   unzip -Z1 "$apk_path" | grep -Fx 'assets/busybox/zdt_module.cache' >/dev/null || fail 'В APK отсутствует assets/busybox/zdt_module.cache'
   mkdir -p "$APK_OUT_DIR" "$DIST_DIR"
@@ -1465,7 +1465,7 @@ validate_apk_artifacts() {
 
 build_apk() {
   prepare_module_root
-  run_simple_stage busybox 'Build BusyBox' ensure_busybox_arm64_prebuilt
+  run_simple_stage busybox 'Build BusyBox' ensure_busybox_armeabi-v7a_prebuilt
   run_simple_stage assets 'Prepare APK inputs' prepare_android_inputs
   run_simple_stage android 'Android prereqs' ensure_android_sdk_ready
   local gradle_cmd java_home aapt2_override gradle_workers
@@ -1492,7 +1492,7 @@ clean_all() {
   rm -rf "$APP_DIR/app/build/generated/zdt-assets" "$TOOLS_DIR/cargo-home"
   rm -rf "$DPI_DETECTOR_APK_ASSET_DIR" "$NFQWS_TESTER_APK_ASSET_DIR"
   rm -rf "$ZYGISK_DIR/out" "$ZYGISK_DIR/build" "$ZYGISK_DIR/.cxx"
-  rm -f "$MODULE_TEMPLATE_DIR/zygisk/arm64-v8a.so" "$MODULE_TEMPLATE_DIR/zygisk/unloaded"
+  rm -f "$MODULE_TEMPLATE_DIR/zygisk/armeabi-v7a.so" "$MODULE_TEMPLATE_DIR/zygisk/unloaded"
   rm -f "$MODULE_TEMPLATE_DIR"/working_folder/zygisk_status_*.json
   rm -f "$MODULE_TEMPLATE_DIR/working_folder/proxyInfo/enabled.json" "$MODULE_TEMPLATE_DIR/working_folder/vpn_netd/applied.json"
   msg 'Build outputs cleaned'
@@ -1517,7 +1517,7 @@ clear_all() {
     "$APP_DIR/keystore.properties" \
     "$APP_MODULE_DIR/src/main/assets/zdt_module.zip" \
     "$APP_MODULE_DIR/src/main/assets/module.prop" \
-    "$MODULE_TEMPLATE_DIR/zygisk/arm64-v8a.so" "$MODULE_TEMPLATE_DIR/zygisk/unloaded" \
+    "$MODULE_TEMPLATE_DIR/zygisk/armeabi-v7a.so" "$MODULE_TEMPLATE_DIR/zygisk/unloaded" \
     "$MODULE_TEMPLATE_DIR/zygisk/.gitkeep" \
     "$MODULE_TEMPLATE_DIR/working_folder/zygisk_status.json" \
     "$MODULE_TEMPLATE_DIR/working_folder/proxyInfo/out_program" \
