@@ -25,7 +25,7 @@ env:
   ANDROID_BUILD_TOOLS_VERSION: "36.0.0"
   GRADLE_VERSION: "9.4.1"
   CARGO_PROFILE: release
-  CARGO_BUILD_TARGET: armv7a-linux-androideabi
+  CARGO_BUILD_TARGET: armv7-linux-androideabi
   BUILD_TYPE: ${{ github.event.inputs.build_type || 'Release' }}
   NO_DASHBOARD: "1"
   OPENVPN_VERSION: "2.7.4"
@@ -294,7 +294,6 @@ jobs:
             echo "ANDROID_NDK_ROOT=$NDK_ROOT"
             echo "ANDROID_NDK_HOME=$NDK_ROOT"
             echo "PATH=$NDK_BIN:$PATH"
-            echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$ANDROID_CC"
             echo "CC_aarch64_linux_android=$ANDROID_CC"
             echo "CXX_aarch64_linux_android=$ANDROID_CXX"
             echo "AR_aarch64_linux_android=$ANDROID_AR"
@@ -324,8 +323,8 @@ jobs:
         run: |
           set -euo pipefail
           echo "NDK_ROOT=$NDK_ROOT"
-          "$CC_aarch64_linux_android" --version | head -1
-          "$AR_aarch64_linux_android" --version | head -1
+          "$ANDROID_CC" --version | head -1
+          "$ANDROID_AR" --version | head -1
           rustc --print target-list | grep -qx '${{ env.CARGO_BUILD_TARGET }}'
           cargo -V
           rustc -V
@@ -407,7 +406,6 @@ jobs:
             echo "ANDROID_NDK_ROOT=$NDK_ROOT"
             echo "ANDROID_NDK_HOME=$NDK_ROOT"
             echo "PATH=$NDK_BIN:$PATH"
-            echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$ANDROID_CC"
             echo "CC_aarch64_linux_android=$ANDROID_CC"
             echo "CXX_aarch64_linux_android=$ANDROID_CXX"
             echo "AR_aarch64_linux_android=$ANDROID_AR"
@@ -437,8 +435,8 @@ jobs:
         run: |
           set -euo pipefail
           echo "NDK_ROOT=$NDK_ROOT"
-          "$CC_aarch64_linux_android" --version | head -1
-          "$AR_aarch64_linux_android" --version | head -1
+          "$ANDROID_CC" --version | head -1
+          "$ANDROID_AR" --version | head -1
           rustc --print target-list | grep -qx '${{ env.CARGO_BUILD_TARGET }}'
           cargo -V
           rustc -V
@@ -1700,7 +1698,6 @@ jobs:
             echo "ANDROID_NDK_ROOT=$NDK_ROOT"
             echo "ANDROID_NDK_HOME=$NDK_ROOT"
             echo "PATH=$NDK_BIN:$PATH"
-            echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$ANDROID_CC"
             echo "CC_aarch64_linux_android=$ANDROID_CC"
             echo "CXX_aarch64_linux_android=$ANDROID_CXX"
             echo "AR_aarch64_linux_android=$ANDROID_AR"
@@ -1730,8 +1727,8 @@ jobs:
         run: |
           set -euo pipefail
           echo "NDK_ROOT=$NDK_ROOT"
-          "$CC_aarch64_linux_android" --version | head -1
-          "$AR_aarch64_linux_android" --version | head -1
+          "$ANDROID_CC" --version | head -1
+          "$ANDROID_AR" --version | head -1
           rustc --print target-list | grep -qx '${{ env.CARGO_BUILD_TARGET }}'
           cargo -V
           rustc -V
@@ -1813,7 +1810,6 @@ jobs:
             echo "ANDROID_NDK_ROOT=$NDK_ROOT"
             echo "ANDROID_NDK_HOME=$NDK_ROOT"
             echo "PATH=$NDK_BIN:$PATH"
-            echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$ANDROID_CC"
             echo "CC_aarch64_linux_android=$ANDROID_CC"
             echo "CXX_aarch64_linux_android=$ANDROID_CXX"
             echo "AR_aarch64_linux_android=$ANDROID_AR"
@@ -1843,8 +1839,8 @@ jobs:
         run: |
           set -euo pipefail
           echo "NDK_ROOT=$NDK_ROOT"
-          "$CC_aarch64_linux_android" --version | head -1
-          "$AR_aarch64_linux_android" --version | head -1
+          "$ANDROID_CC" --version | head -1
+          "$ANDROID_AR" --version | head -1
           rustc --print target-list | grep -qx '${{ env.CARGO_BUILD_TARGET }}'
           cargo -V
           rustc -V
