@@ -1576,7 +1576,7 @@ jobs:
         with:
           name: nfqws2-armeabi-v7a
           path: out/artifacts/nfqws2
-          
+
         # dpitunnel-cli torproxy
       - name: Check prebuilt binaries
         run: |
@@ -2094,7 +2094,7 @@ jobs:
             fi
           done
 
-          KEYSTORE_PATH="$(pwd)/keystores/zdt-debug.keystore"
+          KEYSTORE_PATH="$(pwd)/keystores/zdt-release.keystore"
           mkdir -p "$(dirname "$KEYSTORE_PATH")"
 
           printf '%s' "$ZDT_KEYSTORE_BASE64" | base64 -d > "$KEYSTORE_PATH"
