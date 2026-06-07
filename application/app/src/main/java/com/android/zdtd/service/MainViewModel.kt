@@ -482,7 +482,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app), ZdtdActions {
 
   private fun releaseApkUrl(tag: String): String {
     // Asset name is stable by design.
-    return "https://github.com/GAME-OVER-op/ZDT-D/releases/download/${tag}/app-release.apk"
+    return "https://github.com/MootComb/ZDT-D/releases/download/${tag}/app-release.apk"
   }
 
   private suspend fun httpGetMaybeCached(
@@ -535,7 +535,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app), ZdtdActions {
     _appUpdate.update { it.copy(enabled = true, checking = true, errorText = null) }
 
     // 1) Latest release
-    val latestUrl = "https://api.github.com/repos/GAME-OVER-op/ZDT-D/releases/latest"
+    val latestUrl = "https://api.github.com/repos/MootComb/ZDT-D/releases/latest"
     val etagRel = root.getGitHubEtagLatestRelease()
     val (codeRel, bodyRel, newEtagRel) = runCatching { httpGetMaybeCached(latestUrl, etagRel) }
       .getOrElse {
@@ -6232,7 +6232,7 @@ override fun applyStrategicVariant(programId: String, profile: String, file: Str
 
   override fun startAppUpdateDownload() {
     val url = _appUpdate.value.downloadUrl
-    val releaseUrl = _appUpdate.value.releaseHtmlUrl ?: "https://github.com/GAME-OVER-op/ZDT-D/releases"
+    val releaseUrl = _appUpdate.value.releaseHtmlUrl ?: "https://github.com/MootComb/ZDT-D/releases"
     if (url.isNullOrBlank()) {
       _appUpdateEvents.tryEmit(AppUpdateEvent.OpenUrl(releaseUrl))
       return
@@ -6279,14 +6279,14 @@ override fun applyStrategicVariant(programId: String, profile: String, file: Str
   }
 
   override fun declineUnknownSourcesPermission() {
-    val releaseUrl = _appUpdate.value.releaseHtmlUrl ?: "https://github.com/GAME-OVER-op/ZDT-D/releases"
+    val releaseUrl = _appUpdate.value.releaseHtmlUrl ?: "https://github.com/MootComb/ZDT-D/releases"
     clearDownloadedUpdateApk()
     _appUpdate.update { it.copy(bannerVisible = false, errorText = null) }
     _appUpdateEvents.tryEmit(AppUpdateEvent.OpenUrl(releaseUrl))
   }
 
   override fun onUnknownSourcesPermissionResult(granted: Boolean) {
-    val releaseUrl = _appUpdate.value.releaseHtmlUrl ?: "https://github.com/GAME-OVER-op/ZDT-D/releases"
+    val releaseUrl = _appUpdate.value.releaseHtmlUrl ?: "https://github.com/MootComb/ZDT-D/releases"
     val path = _appUpdate.value.downloadedPath
     _appUpdate.update { it.copy(needsUnknownSourcesPermission = false) }
 

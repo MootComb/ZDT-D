@@ -150,7 +150,7 @@ class MainActivity : AppCompatActivity() {
       startActivity(i)
     }.onFailure {
       // Fallback to releases page if install intent fails.
-      openUrl("https://github.com/GAME-OVER-op/ZDT-D/releases")
+      openUrl("https://github.com/MootComb/ZDT-D/releases")
     }
   }
 
