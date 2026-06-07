@@ -540,8 +540,8 @@ jobs:
             echo "ANDROID_NDK_ROOT=$NDK_ROOT"
             echo "ANDROID_NDK_HOME=$NDK_ROOT"
             echo "PATH=$NDK_BIN:$PATH"
-            echo "OPENVPN_CC=$NDK_BIN/armv7-linux-androideabi${{ env.OPENVPN_ANDROID_API_LEVEL }}-clang"
-            echo "OPENVPN_CXX=$NDK_BIN/armv7-linux-androideabi${{ env.OPENVPN_ANDROID_API_LEVEL }}-clang++"
+            echo "OPENVPN_CC=$NDK_BIN/armv7a-linux-androideabi${{ env.OPENVPN_ANDROID_API_LEVEL }}-clang"
+            echo "OPENVPN_CXX=$NDK_BIN/armv7a-linux-androideabi${{ env.OPENVPN_ANDROID_API_LEVEL }}-clang++"
             echo "OPENVPN_AR=$NDK_BIN/llvm-ar"
             echo "OPENVPN_RANLIB=$NDK_BIN/llvm-ranlib"
             echo "OPENVPN_STRIP=$NDK_BIN/llvm-strip"
@@ -775,7 +775,7 @@ jobs:
             echo "ANDROID_NDK_ROOT=$NDK_ROOT"
             echo "ANDROID_NDK_HOME=$NDK_ROOT"
             echo "PATH=$NDK_BIN:$PATH"
-            echo "AMNEZIAWG_CC=$NDK_BIN/armv7-linux-androideabi${{ env.AMNEZIAWG_ANDROID_API_LEVEL }}-clang"
+            echo "AMNEZIAWG_CC=$NDK_BIN/armv7a-linux-androideabi${{ env.AMNEZIAWG_ANDROID_API_LEVEL }}-clang"
             echo "AMNEZIAWG_STRIP=$NDK_BIN/llvm-strip"
           } >> "$GITHUB_ENV"
 
@@ -940,6 +940,7 @@ jobs:
           GOOS=android \
           GOARCH=arm \
           CGO_ENABLED=1 \
+          CGO_CFLAGS: "-D__ANDROID_API__=24" \
             go build \
               -trimpath \
               -ldflags="-s -w -buildid=" \
@@ -1280,6 +1281,7 @@ jobs:
           test -d "$luajitdir" || { echo "::error::LuaJIT source directory not found"; exit 1; }
           pushd "$luajitdir" > /dev/null
           make \
+      HOST_CC="gcc -m32" \
             BUILDMODE=static \
             XCFLAGS="-DLUAJIT_DISABLE_FFI" \
             HOST_CC="cc" \
