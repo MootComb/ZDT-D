@@ -47,7 +47,7 @@ AAPT2_OVERRIDE=/path/to/aapt2 make debug
 ## Куда складывать внешние бинарники
 
 ```text
-prebuilt/bin/arm64-v8a/
+prebuilt/bin/armeabi-v7a/
 ```
 
 Обязательные имена:

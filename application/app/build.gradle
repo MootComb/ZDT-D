@@ -29,13 +29,13 @@ def zdtCompileSdk = (findProperty('zdtCompileSdk') ?: System.getenv('ZDT_COMPILE
 def generatedModuleZip = file('../../out/module/zdt_module.zip')
 def zdtModuleZip = file("$generatedAssetsDir/zdt_module.zip")
 def bundledModuleProp = file("$generatedAssetsDir/module.prop")
-def bundledDpiDetectorAsset = file("$generatedAssetsDir/dpi-detector/arm64-v8a/dpi-detector")
-def bundledNfqwsTesterAsset = file("$generatedAssetsDir/nfqws-tester/arm64-v8a/nfqws_tester")
-def prebuiltBusyBox = file('../../prebuilt/bin/arm64-v8a/busybox')
-def busyBoxBuildScript = file('../../scripts/module/build-busybox-arm64.sh')
-def bundledBusyBoxAsset = file("$generatedAssetsDir/busybox/busybox-arm64")
-def bundledBusyBoxSha = file("$generatedAssetsDir/busybox/busybox-arm64.sha256")
-def bundledBusyBoxSource = file("$generatedAssetsDir/busybox/busybox-arm64.source")
+def bundledDpiDetectorAsset = file("$generatedAssetsDir/dpi-detector/armeabi-v7a/dpi-detector")
+def bundledNfqwsTesterAsset = file("$generatedAssetsDir/nfqws-tester/armeabi-v7a/nfqws_tester")
+def prebuiltBusyBox = file('../../prebuilt/bin/armeabi-v7a/busybox')
+def busyBoxBuildScript = file('../../scripts/module/build-busybox-armeabi-v7a.sh')
+def bundledBusyBoxAsset = file("$generatedAssetsDir/busybox/busybox-armeabi-v7a")
+def bundledBusyBoxSha = file("$generatedAssetsDir/busybox/busybox-armeabi-v7a.sha256")
+def bundledBusyBoxSource = file("$generatedAssetsDir/busybox/busybox-armeabi-v7a.source")
 def bundledModuleSha = file("$generatedAssetsDir/busybox/zdt_module.sha256")
 def bundledModuleCache = file("$generatedAssetsDir/busybox/zdt_module.cache")
 
@@ -57,7 +57,7 @@ def ensurePrebuiltBusyBox = { ->
     if (!busyBoxBuildScript.exists()) {
       throw new GradleException("BusyBox build script not found: ${busyBoxBuildScript}")
     }
-    println("[ZDT-D] building BusyBox arm64 from official source")
+    println("[ZDT-D] building BusyBox armeabi-v7a from official source")
     prebuiltBusyBox.parentFile.mkdirs()
     def process = new ProcessBuilder('bash', busyBoxBuildScript.absolutePath, prebuiltBusyBox.absolutePath)
         .directory(rootProject.projectDir.parentFile)
@@ -89,7 +89,7 @@ def ensurePrebuiltBusyBox = { ->
   prebuiltBusyBox.setExecutable(true, false)
   prebuiltBusyBox.setReadable(true, false)
   prebuiltBusyBox.setWritable(true, true)
-  println("[ZDT-D] BusyBox arm64 ready: ${prebuiltBusyBox} sha256=${sha256Hex(prebuiltBusyBox)}")
+  println("[ZDT-D] BusyBox armeabi-v7a ready: ${prebuiltBusyBox} sha256=${sha256Hex(prebuiltBusyBox)}")
 }
 
 android {
@@ -98,7 +98,7 @@ android {
 
   defaultConfig {
     applicationId 'com.android.zdtd.service'
-    minSdk 26
+    minSdk 24
     targetSdk 36
     versionCode moduleVersionCode
     versionName moduleVersionName
@@ -233,16 +233,16 @@ tasks.register('prepareZdtGeneratedAssets') {
     def moduleSha = sha256Hex(zdtModuleZip)
     def busyBoxSha = sha256Hex(bundledBusyBoxAsset)
     bundledModuleSha.text = "${moduleSha}  zdt_module.zip\n"
-    bundledBusyBoxSha.text = "${busyBoxSha}  busybox-arm64\n"
+    bundledBusyBoxSha.text = "${busyBoxSha}  busybox-armeabi-v7a\n"
     bundledModuleCache.text = """name=zdt_module.zip
 sha256=${moduleSha}
 size=${zdtModuleZip.length()}
 moduleVersion=${moduleVersionName}
 moduleVersionCode=${moduleVersionCode}
 protection=fake-central-directory-encrypt
-busyboxAsset=busybox/busybox-arm64
+busyboxAsset=busybox/busybox-armeabi-v7a
 busyboxSha256=${busyBoxSha}
-busyboxSource=busybox/busybox-arm64.source
+busyboxSource=busybox/busybox-armeabi-v7a.source
 """
     println("[ZDT-D] wrote module cache metadata: ${bundledModuleCache}")
     println("[ZDT-D] bundled BusyBox asset: ${bundledBusyBoxAsset}")

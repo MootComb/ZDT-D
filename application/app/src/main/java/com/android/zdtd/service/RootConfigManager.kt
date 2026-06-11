@@ -206,7 +206,17 @@ class RootConfigManager(private val context: Context) {
      * We use it to avoid showing the installer flow again after a successful module installation
      * and device reboot. The actual source of truth remains the module files under /data/adb.
      */
-    fun isSetupDone(): Boolean = prefs.getBoolean("setup_done", false)
+    fun isSetupDone(): Boolean {
+        val flagFromPrefs = prefs.getBoolean("setup_done", false)
+        if (flagFromPrefs) return true
+    
+        val forceFlagPath = "/data/adb/modules/ZDT-D/setting/force_install"
+        val hasForceFlag = runCatching {
+            execRoot("sh -c 'test -f $forceFlagPath'").isSuccess
+        }.getOrDefault(false)
+    
+        return hasForceFlag
+    }
 
     fun setSetupDone(done: Boolean) {
         // Use commit() so the flag is persisted immediately (important when user reboots right after install).

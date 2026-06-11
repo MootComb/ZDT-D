@@ -2,6 +2,7 @@
 
 This directory contains the native Zygisk component used by ZDT-D. The build
 produces the optional module library:
+This directory contains the source code for the ZDT-D Zygisk `armeabi-v7a.so` module.
 
 ```text
 zygisk/arm64-v8a.so
@@ -37,7 +38,7 @@ Default checked build:
 Default output:
 
 ```text
-out/arm64-v8a.so
+out/armeabi-v7a.so
 ```
 
 Build directly into the module layout:
@@ -49,13 +50,13 @@ Build directly into the module layout:
 Module output:
 
 ```text
-zygisk/arm64-v8a.so
+zygisk/armeabi-v7a.so
 ```
 
 Build to an explicit path:
 
 ```bash
-./build.sh /path/to/arm64-v8a.so
+./build.sh /path/to/armeabi-v7a.so
 ```
 
 `build.sh` validates that:

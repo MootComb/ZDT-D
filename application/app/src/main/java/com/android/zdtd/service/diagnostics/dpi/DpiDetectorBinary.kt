@@ -80,6 +80,6 @@ class DpiDetectorBinary(private val context: Context) {
 
     companion object {
         const val BINARY_NAME = "dpi-detector"
-        const val ASSET_PATH = "dpi-detector/arm64-v8a/dpi-detector"
+        const val ASSET_PATH = "dpi-detector/armeabi-v7a/dpi-detector"
     }
 }

@@ -3,7 +3,7 @@ name: Build ZDT-D
 on:
   push:
     branches:
-      - main
+      - armv7
   workflow_dispatch:
     inputs:
       build_type:
@@ -25,7 +25,7 @@ env:
   ANDROID_BUILD_TOOLS_VERSION: "36.0.0"
   GRADLE_VERSION: "9.4.1"
   CARGO_PROFILE: release
-  CARGO_BUILD_TARGET: aarch64-linux-android
+  CARGO_BUILD_TARGET: armv7-linux-androideabi
   BUILD_TYPE: ${{ github.event.inputs.build_type || 'Release' }}
   NO_DASHBOARD: "1"
   OPENVPN_VERSION: "2.7.4"
@@ -265,7 +265,7 @@ jobs:
       - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android
+          targets: armv7-linux-androideabi
 
       - name: Install Android NDK cross-linker
         run: |
@@ -279,8 +279,8 @@ jobs:
             NDK_ROOT="$ANDROID_SDK_ROOT/ndk/$(ls "$ANDROID_SDK_ROOT/ndk" | sort -V | tail -1)"
           fi
           NDK_BIN="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
-          ANDROID_CC="$NDK_BIN/aarch64-linux-android21-clang"
-          ANDROID_CXX="$NDK_BIN/aarch64-linux-android21-clang++"
+          ANDROID_CC="$NDK_BIN/armv7a-linux-androideabi21-clang"
+          ANDROID_CXX="$NDK_BIN/armv7a-linux-androideabi21-clang++"
           ANDROID_AR="$NDK_BIN/llvm-ar"
           ANDROID_RANLIB="$NDK_BIN/llvm-ranlib"
 
@@ -294,7 +294,6 @@ jobs:
             echo "ANDROID_NDK_ROOT=$NDK_ROOT"
             echo "ANDROID_NDK_HOME=$NDK_ROOT"
             echo "PATH=$NDK_BIN:$PATH"
-            echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$ANDROID_CC"
             echo "CC_aarch64_linux_android=$ANDROID_CC"
             echo "CXX_aarch64_linux_android=$ANDROID_CXX"
             echo "AR_aarch64_linux_android=$ANDROID_AR"
@@ -303,7 +302,7 @@ jobs:
 
           mkdir -p ~/.cargo
           cat >> ~/.cargo/config.toml <<EOF2
-          [target.aarch64-linux-android]
+          [target.armv7-linux-androideabi]
           linker = "$ANDROID_CC"
           ar = "$ANDROID_AR"
           EOF2
@@ -315,18 +314,21 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             rust/target
-          key: cargo-zdtd-aarch64-linux-android-${{ hashFiles('rust/Cargo.lock', 'rust/zdtd/Cargo.toml') }}
+          key: cargo-zdtd-armv7-linux-androideabi-${{ hashFiles('rust/Cargo.lock', 'rust/zdtd/Cargo.toml') }}
           restore-keys: |
-            cargo-zdtd-aarch64-linux-android-
-            cargo-aarch64-linux-android-
+            cargo-zdtd-armv7-linux-androideabi-
+            cargo-armv7-linux-androideabi-
 
       - name: Verify Android Rust cross toolchain
+        env:
+          ANDROID_CC: ${{ env.CC_aarch64_linux_android }}
+          ANDROID_AR: ${{ env.AR_aarch64_linux_android }}
         run: |
           set -euo pipefail
           echo "NDK_ROOT=$NDK_ROOT"
-          "$CC_aarch64_linux_android" --version | head -1
-          "$AR_aarch64_linux_android" --version | head -1
-          rustc --print target-list | grep -qx '${{ env.CARGO_BUILD_TARGET }}'
+          "$ANDROID_CC" --version | head -1
+          "$ANDROID_AR" --version | head -1
+          rustc --print target-list | grep -qx 'armv7-linux-androideabi'
           cargo -V
           rustc -V
 
@@ -338,8 +340,10 @@ jobs:
           RUSTFLAGS: ""
           CARGO_ENCODED_RUSTFLAGS: ""
           RUSTC_WRAPPER: ""
+          CC_armv7-linux-androideabi: ${{ env.CC_aarch64_linux_android }}
+          CFLAGS_armv7-linux-androideabi: "-D__ANDROID_API__=21"
+          AR_armv7-linux-androideabi: ${{ env.AR_aarch64_linux_android }}
         run: |
-          set -euo pipefail
           cargo build --manifest-path rust/zdtd/Cargo.toml --profile "${{ env.CARGO_PROFILE }}" --target "${{ env.CARGO_BUILD_TARGET }}"
 
       - name: Collect zdtd
@@ -356,7 +360,7 @@ jobs:
       - name: Upload zdtd binary
         uses: actions/upload-artifact@v7
         with:
-          name: zdtd-arm64
+          name: zdtd-armeabi-v7a
           path: out/artifacts/zdtd/zdtd
           retention-days: 1
 
@@ -378,7 +382,7 @@ jobs:
       - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android
+          targets: armv7-linux-androideabi
 
       - name: Install Android NDK cross-linker
         run: |
@@ -392,8 +396,8 @@ jobs:
             NDK_ROOT="$ANDROID_SDK_ROOT/ndk/$(ls "$ANDROID_SDK_ROOT/ndk" | sort -V | tail -1)"
           fi
           NDK_BIN="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
-          ANDROID_CC="$NDK_BIN/aarch64-linux-android21-clang"
-          ANDROID_CXX="$NDK_BIN/aarch64-linux-android21-clang++"
+          ANDROID_CC="$NDK_BIN/armv7a-linux-androideabi21-clang"
+          ANDROID_CXX="$NDK_BIN/armv7a-linux-androideabi21-clang++"
           ANDROID_AR="$NDK_BIN/llvm-ar"
           ANDROID_RANLIB="$NDK_BIN/llvm-ranlib"
 
@@ -407,7 +411,6 @@ jobs:
             echo "ANDROID_NDK_ROOT=$NDK_ROOT"
             echo "ANDROID_NDK_HOME=$NDK_ROOT"
             echo "PATH=$NDK_BIN:$PATH"
-            echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$ANDROID_CC"
             echo "CC_aarch64_linux_android=$ANDROID_CC"
             echo "CXX_aarch64_linux_android=$ANDROID_CXX"
             echo "AR_aarch64_linux_android=$ANDROID_AR"
@@ -416,7 +419,7 @@ jobs:
 
           mkdir -p ~/.cargo
           cat >> ~/.cargo/config.toml <<EOF2
-          [target.aarch64-linux-android]
+          [target.armv7-linux-androideabi]
           linker = "$ANDROID_CC"
           ar = "$ANDROID_AR"
           EOF2
@@ -428,18 +431,21 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             rust/target
-          key: cargo-t2s-aarch64-linux-android-${{ hashFiles('rust/Cargo.lock', 'rust/T2s/Cargo.toml') }}
+          key: cargo-t2s-armv7-linux-androideabi-${{ hashFiles('rust/Cargo.lock', 'rust/T2s/Cargo.toml') }}
           restore-keys: |
-            cargo-t2s-aarch64-linux-android-
-            cargo-aarch64-linux-android-
+            cargo-t2s-armv7-linux-androideabi-
+            cargo-armv7-linux-androideabi-
 
       - name: Verify Android Rust cross toolchain
+        env:
+          ANDROID_CC: ${{ env.CC_aarch64_linux_android }}
+          ANDROID_AR: ${{ env.AR_aarch64_linux_android }}
         run: |
           set -euo pipefail
           echo "NDK_ROOT=$NDK_ROOT"
-          "$CC_aarch64_linux_android" --version | head -1
-          "$AR_aarch64_linux_android" --version | head -1
-          rustc --print target-list | grep -qx '${{ env.CARGO_BUILD_TARGET }}'
+          "$ANDROID_CC" --version | head -1
+          "$ANDROID_AR" --version | head -1
+          rustc --print target-list | grep -qx 'armv7-linux-androideabi'
           cargo -V
           rustc -V
 
@@ -451,8 +457,10 @@ jobs:
           RUSTFLAGS: ""
           CARGO_ENCODED_RUSTFLAGS: ""
           RUSTC_WRAPPER: ""
+          CC_armv7-linux-androideabi: ${{ env.CC_aarch64_linux_android }}
+          CFLAGS_armv7-linux-androideabi: "-D__ANDROID_API__=21"
+          AR_armv7-linux-androideabi: ${{ env.AR_aarch64_linux_android }}
         run: |
-          set -euo pipefail
           cargo build --manifest-path rust/T2s/Cargo.toml --profile "${{ env.CARGO_PROFILE }}" --target "${{ env.CARGO_BUILD_TARGET }}"
 
       - name: Collect t2s
@@ -469,7 +477,7 @@ jobs:
       - name: Upload t2s binary
         uses: actions/upload-artifact@v7
         with:
-          name: t2s-arm64
+          name: t2s-armeabi-v7a
           path: out/artifacts/t2s/t2s
           retention-days: 1
 
@@ -488,7 +496,7 @@ jobs:
         run: echo "zdtd and T2S artifacts are ready for module packaging"
 
   build_openvpn:
-    name: 2 Module binary / build OpenVPN arm64
+    name: 2 Module binary / build OpenVPN armeabi-v7a
     runs-on: ubuntu-latest
     needs: build_gate
     if: needs.build_gate.outputs.should_build == 'true'
@@ -532,8 +540,8 @@ jobs:
             echo "ANDROID_NDK_ROOT=$NDK_ROOT"
             echo "ANDROID_NDK_HOME=$NDK_ROOT"
             echo "PATH=$NDK_BIN:$PATH"
-            echo "OPENVPN_CC=$NDK_BIN/aarch64-linux-android${{ env.OPENVPN_ANDROID_API_LEVEL }}-clang"
-            echo "OPENVPN_CXX=$NDK_BIN/aarch64-linux-android${{ env.OPENVPN_ANDROID_API_LEVEL }}-clang++"
+            echo "OPENVPN_CC=$NDK_BIN/armv7a-linux-androideabi${{ env.OPENVPN_ANDROID_API_LEVEL }}-clang"
+            echo "OPENVPN_CXX=$NDK_BIN/armv7a-linux-androideabi${{ env.OPENVPN_ANDROID_API_LEVEL }}-clang++"
             echo "OPENVPN_AR=$NDK_BIN/llvm-ar"
             echo "OPENVPN_RANLIB=$NDK_BIN/llvm-ranlib"
             echo "OPENVPN_STRIP=$NDK_BIN/llvm-strip"
@@ -586,7 +594,7 @@ jobs:
           tar -xzf "$SRC/lzo.tar.gz" -C "$BUILD"
           pushd "$BUILD/lzo-${LZO_VERSION}" > /dev/null
           ./configure \
-            --host=aarch64-linux-android \
+            --host=armv7-linux-androideabi \
             --prefix="$PREFIX" \
             --enable-static \
             --disable-shared
@@ -614,7 +622,7 @@ jobs:
           tar -xjf "$SRC/mbedtls.tar.bz2" -C "$BUILD"
           cmake -S "$BUILD/mbedtls-${MBEDTLS_VERSION}" -B "$BUILD/mbedtls-build" \
             -DCMAKE_TOOLCHAIN_FILE="$NDK_ROOT/build/cmake/android.toolchain.cmake" \
-            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_ABI=armeabi-v7a \
             -DANDROID_PLATFORM="android-${ANDROID_API}" \
             -DCMAKE_BUILD_TYPE=MinSizeRel \
             -DCMAKE_INSTALL_PREFIX="$PREFIX" \
@@ -684,7 +692,7 @@ jobs:
           autoreconf -fi
           
           PKG_CONFIG="pkg-config --static" ./configure \
-            --host=aarch64-linux-android \
+            --host=armv7-linux-androideabi \
             --prefix="$PREFIX/openvpn" \
             --with-crypto-library=mbedtls \
             --enable-management \
@@ -718,12 +726,12 @@ jobs:
       - name: Upload OpenVPN binary
         uses: actions/upload-artifact@v7
         with:
-          name: openvpn-arm64
+          name: openvpn-armeabi-v7a
           path: out/artifacts/openvpn/openvpn
           retention-days: 1
 
   build_amneziawg:
-    name: 2 Module binary / build AmneziaWG arm64
+    name: 2 Module binary / build AmneziaWG armeabi-v7a
     runs-on: ubuntu-latest
     needs: build_gate
     if: needs.build_gate.outputs.should_build == 'true'
@@ -767,13 +775,14 @@ jobs:
             echo "ANDROID_NDK_ROOT=$NDK_ROOT"
             echo "ANDROID_NDK_HOME=$NDK_ROOT"
             echo "PATH=$NDK_BIN:$PATH"
-            echo "AMNEZIAWG_CC=$NDK_BIN/aarch64-linux-android${{ env.AMNEZIAWG_ANDROID_API_LEVEL }}-clang"
+            echo "AMNEZIAWG_CC=$NDK_BIN/armv7a-linux-androideabi${{ env.AMNEZIAWG_ANDROID_API_LEVEL }}-clang"
             echo "AMNEZIAWG_STRIP=$NDK_BIN/llvm-strip"
           } >> "$GITHUB_ENV"
 
       - name: Build AmneziaWG from official sources
         env:
           ANDROID_API: ${{ env.AMNEZIAWG_ANDROID_API_LEVEL }}
+          NDK_BIN: ${{ env.NDK_ROOT }}/toolchains/llvm/prebuilt/linux-x86_64/bin
         run: |
           set -euo pipefail
 
@@ -833,8 +842,10 @@ jobs:
           echo "=== Build amneziawg-go (${AMNEZIAWG_GO_REF}) ==="
           pushd "$SRC/amneziawg-go" > /dev/null
           GOOS=android \
-          GOARCH=arm64 \
-          CGO_ENABLED=0 \
+          GOARCH=arm \
+          GOARM=7 \
+          CGO_ENABLED=1 \
+          CC=$NDK_BIN/armv7a-linux-androideabi24-clang \
             go build \
               -trimpath \
               -ldflags="-s -w -buildid=" \
@@ -886,7 +897,7 @@ jobs:
       - name: Upload AmneziaWG binaries
         uses: actions/upload-artifact@v7
         with:
-          name: amneziawg-arm64
+          name: amneziawg-armeabi-v7a
           path: |
             out/artifacts/amneziawg/amneziawg-go
             out/artifacts/amneziawg/awg
@@ -895,7 +906,7 @@ jobs:
           retention-days: 1
 
   build_wireproxy:
-    name: 2 Module binary / build wireproxy arm64
+    name: 2 Module binary / build wireproxy armeabi-v7a
     runs-on: ubuntu-latest
     needs: build_gate
     if: needs.build_gate.outputs.should_build == 'true'
@@ -911,6 +922,25 @@ jobs:
         with:
           go-version: '1.24.4'
           cache: false
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK
+        run: |
+          set -euo pipefail
+          NDK_VERSION="27.2.12479018"
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager "ndk;$NDK_VERSION"
+          NDK_ROOT="$ANDROID_SDK_ROOT/ndk/$NDK_VERSION"
+          if [[ ! -d "$NDK_ROOT" ]]; then
+            echo "::warning::Expected NDK not found at $NDK_ROOT, falling back to latest installed NDK"
+            NDK_ROOT="$ANDROID_SDK_ROOT/ndk/$(ls "$ANDROID_SDK_ROOT/ndk" | sort -V | tail -1)"
+          fi
+          NDK_BIN="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          echo "NDK_ROOT=$NDK_ROOT" >> "$GITHUB_ENV"
+          echo "NDK_BIN=$NDK_BIN" >> "$GITHUB_ENV"
+          echo "PATH=$NDK_BIN:$PATH" >> "$GITHUB_ENV"
 
       - name: Build wireproxy from official source
         run: |
@@ -929,9 +959,12 @@ jobs:
 
           echo "=== Build wireproxy (${WIREPROXY_REF}) ==="
           pushd "$SRC/wireproxy" > /dev/null
+          CC=$NDK_BIN/armv7a-linux-androideabi24-clang \
+          CXX=$NDK_BIN/armv7a-linux-androideabi24-clang++ \
+          CGO_ENABLED=1 \
           GOOS=android \
-          GOARCH=arm64 \
-          CGO_ENABLED=0 \
+          GOARCH=arm \
+          GOARM=7 \
             go build \
               -trimpath \
               -ldflags="-s -w -buildid=" \
@@ -952,7 +985,7 @@ jobs:
       - name: Upload wireproxy binary
         uses: actions/upload-artifact@v7
         with:
-          name: wireproxy-arm64
+          name: wireproxy-armeabi-v7a
           path: |
             out/artifacts/wireproxy/wireproxy
             out/artifacts/wireproxy/wireproxy.commit
@@ -960,7 +993,7 @@ jobs:
           retention-days: 1
 
   build_nfqws:
-    name: 2 Module binary / build nfqws arm64
+    name: 2 Module binary / build nfqws armeabi-v7a
     runs-on: ubuntu-latest
     needs: build_gate
     if: needs.build_gate.outputs.should_build == 'true'
@@ -1007,8 +1040,8 @@ jobs:
             echo "ANDROID_NDK_HOME=$NDK_ROOT"
             echo "PATH=$NDK_BIN:$PATH"
             echo "NFQWS_ANDROID_API=21"
-            echo "NFQWS_TARGET=aarch64-linux-android"
-            echo "NFQWS_CC=$NDK_BIN/aarch64-linux-android21-clang"
+            echo "NFQWS_TARGET=armv7-linux-androideabi"
+            echo "NFQWS_CC=$NDK_BIN/armv7a-linux-androideabi21-clang"
             echo "NFQWS_AR=$NDK_BIN/llvm-ar"
             echo "NFQWS_RANLIB=$NDK_BIN/llvm-ranlib"
             echo "NFQWS_STRIP=$NDK_BIN/llvm-strip"
@@ -1128,7 +1161,7 @@ jobs:
           zapret_ref=$ZAPRET_REF
           zapret_commit=$ZAPRET_COMMIT
           binary=nfqws
-          target=android-arm64
+          target=android-armeabi-v7a
           android_api=$NFQWS_ANDROID_API
           zlib_ref=$ZLIB_REF
           libmnl_version=1.0.5
@@ -1146,7 +1179,7 @@ jobs:
       - name: Upload nfqws binary
         uses: actions/upload-artifact@v7
         with:
-          name: nfqws-arm64
+          name: nfqws-armeabi-v7a
           path: |
             out/artifacts/nfqws/nfqws
             out/artifacts/nfqws/nfqws.version
@@ -1156,7 +1189,7 @@ jobs:
           retention-days: 1
 
   build_nfqws2:
-    name: 2 Module binary / build nfqws2 arm64
+    name: 2 Module binary / build nfqws2 armeabi-v7a
     runs-on: ubuntu-latest
     needs: build_gate
     if: needs.build_gate.outputs.should_build == 'true'
@@ -1208,9 +1241,9 @@ jobs:
             echo "ANDROID_NDK_HOME=$NDK_ROOT"
             echo "PATH=$NDK_BIN:$PATH"
             echo "NFQWS2_ANDROID_API=21"
-            echo "NFQWS2_TARGET=aarch64-linux-android"
+            echo "NFQWS2_TARGET=armv7-linux-androideabi"
             echo "NFQWS2_TOOLCHAIN=$TOOLCHAIN"
-            echo "NFQWS2_CC=$NDK_BIN/clang --target=aarch64-linux-android21"
+            echo "NFQWS2_CC=$NDK_BIN/clang --target=armv7-linux-androideabi21"
             echo "NFQWS2_AR=$NDK_BIN/llvm-ar"
             echo "NFQWS2_RANLIB=$NDK_BIN/llvm-ranlib"
             echo "NFQWS2_STRIP=$NDK_BIN/llvm-strip"
@@ -1262,7 +1295,7 @@ jobs:
           echo "$ZAPRET2_REF" | tee "$ARTIFACT_DIR/zapret2.ref"
           echo "$ZAPRET2_COMMIT" | tee "$ARTIFACT_DIR/zapret2.commit"
 
-          echo "=== Build LuaJIT for Android arm64 ==="
+          echo "=== Build LuaJIT for Android armeabi-v7a ==="
           LUAJIT_VER="2.1"
           LUAJIT_RELEASE="2.1-20250826"
           LUAJIT_LUAVER="5.1"
@@ -1274,7 +1307,7 @@ jobs:
           make \
             BUILDMODE=static \
             XCFLAGS="-DLUAJIT_DISABLE_FFI" \
-            HOST_CC="cc" \
+            HOST_CC="gcc -m32" \
             CROSS= \
             CC="$NFQWS2_CC" \
             TARGET_AR="$NFQWS2_AR rcus" \
@@ -1363,7 +1396,7 @@ jobs:
           zapret2_ref=$ZAPRET2_REF
           zapret2_commit=$ZAPRET2_COMMIT
           binary=nfqws2
-          target=android-arm64
+          target=android-armeabi-v7a
           android_api=$NFQWS2_ANDROID_API
           luajit_release=$LUAJIT_RELEASE
           zlib_ref=$ZLIB_REF
@@ -1382,7 +1415,7 @@ jobs:
       - name: Upload nfqws2 binary
         uses: actions/upload-artifact@v7
         with:
-          name: nfqws2-arm64
+          name: nfqws2-armeabi-v7a
           path: |
             out/artifacts/nfqws2/nfqws2
             out/artifacts/nfqws2/nfqws2.version
@@ -1441,7 +1474,7 @@ jobs:
           echo "ANDROID_NDK_ROOT=$NDK_ROOT" >> "$GITHUB_ENV"
           echo "ANDROID_NDK_HOME=$NDK_ROOT" >> "$GITHUB_ENV"
 
-      - name: Build Zygisk arm64-v8a
+      - name: Build Zygisk armeabi-v7a
         env:
           ANDROID_HOME: ${{ env.ANDROID_HOME }}
           ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
@@ -1451,11 +1484,11 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p out/zygisk
-          ./zygisk/build.sh out/zygisk/arm64-v8a.so
-          file out/zygisk/arm64-v8a.so
-          test -s out/zygisk/arm64-v8a.so
-          readelf -Ws out/zygisk/arm64-v8a.so | grep -q ' zygisk_module_entry$'
-          if readelf -d out/zygisk/arm64-v8a.so | grep -E 'NEEDED.*(libc\+\+|libstdc\+\+)' >/dev/null 2>&1; then
+          ./zygisk/build.sh out/zygisk/armeabi-v7a.so
+          file out/zygisk/armeabi-v7a.so
+          test -s out/zygisk/armeabi-v7a.so
+          readelf -Ws out/zygisk/armeabi-v7a.so | grep -q ' zygisk_module_entry$'
+          if readelf -d out/zygisk/armeabi-v7a.so | grep -E 'NEEDED.*(libc\+\+|libstdc\+\+)' >/dev/null 2>&1; then
             echo "::error::Zygisk binary must not depend on C++ STL runtime"
             exit 1
           fi
@@ -1463,8 +1496,8 @@ jobs:
       - name: Upload Zygisk binary
         uses: actions/upload-artifact@v7
         with:
-          name: zygisk-arm64
-          path: out/zygisk/arm64-v8a.so
+          name: zygisk-armeabi-v7a
+          path: out/zygisk/armeabi-v7a.so
           retention-days: 1
 
   module_zygisk_ready:
@@ -1499,57 +1532,58 @@ jobs:
       - name: Download zdtd binary
         uses: actions/download-artifact@v7
         with:
-          name: zdtd-arm64
+          name: zdtd-armeabi-v7a
           path: out/artifacts/zdtd
 
       - name: Download T2S binary
         uses: actions/download-artifact@v7
         with:
-          name: t2s-arm64
+          name: t2s-armeabi-v7a
           path: out/artifacts/t2s
 
       - name: Download Zygisk binary
         uses: actions/download-artifact@v7
         with:
-          name: zygisk-arm64
+          name: zygisk-armeabi-v7a
           path: out/zygisk
 
       - name: Download OpenVPN binary
         uses: actions/download-artifact@v7
         with:
-          name: openvpn-arm64
+          name: openvpn-armeabi-v7a
           path: out/artifacts/openvpn
 
       - name: Download AmneziaWG binaries
         uses: actions/download-artifact@v7
         with:
-          name: amneziawg-arm64
+          name: amneziawg-armeabi-v7a
           path: out/artifacts/amneziawg
 
       - name: Download wireproxy binary
         uses: actions/download-artifact@v7
         with:
-          name: wireproxy-arm64
+          name: wireproxy-armeabi-v7a
           path: out/artifacts/wireproxy
 
       - name: Download nfqws binary
         uses: actions/download-artifact@v7
         with:
-          name: nfqws-arm64
+          name: nfqws-armeabi-v7a
           path: out/artifacts/nfqws
 
       - name: Download nfqws2 binary
         uses: actions/download-artifact@v7
         with:
-          name: nfqws2-arm64
+          name: nfqws2-armeabi-v7a
           path: out/artifacts/nfqws2
 
+        # dpitunnel-cli torproxy
       - name: Check prebuilt binaries
         run: |
-          REQUIRED=(byedpi dnscrypt dpitunnel-cli opera-proxy sing-box mieru torproxy lyrebird tun2socks mihomo)
+          REQUIRED=(byedpi dnscrypt opera-proxy sing-box mieru lyrebird tun2socks mihomo)
           MISSING=()
           for bin in "${REQUIRED[@]}"; do
-            [[ -f "prebuilt/bin/arm64-v8a/$bin" ]] || MISSING+=("$bin")
+            [[ -f "prebuilt/bin/armeabi-v7a/$bin" ]] || MISSING+=("$bin")
           done
           if [[ ${#MISSING[@]} -gt 0 ]]; then
             echo "::error::Binaries doesn't exist: ${MISSING[*]}"
@@ -1563,10 +1597,10 @@ jobs:
 
           MODULE_BUILD_DIR="out/module_build/module_root"
           MODULE_ZIP="out/module/zdt_module.zip"
-          PREBUILT="prebuilt/bin/arm64-v8a"
+          PREBUILT="prebuilt/bin/armeabi-v7a"
           ZDTD_BIN="out/artifacts/zdtd/zdtd"
           T2S_BIN="out/artifacts/t2s/t2s"
-          ZYGISK_SO="out/zygisk/arm64-v8a.so"
+          ZYGISK_SO="out/zygisk/armeabi-v7a.so"
           OPENVPN_BIN="out/artifacts/openvpn/openvpn"
           AMNEZIAWG_GO_BIN="out/artifacts/amneziawg/amneziawg-go"
           AWG_BIN="out/artifacts/amneziawg/awg"
@@ -1595,7 +1629,7 @@ jobs:
           rm -f "$MODULE_BUILD_DIR/zygisk/unloaded" 2>/dev/null || true
 
           mkdir -p "$MODULE_BUILD_DIR/bin" "$MODULE_BUILD_DIR/zygisk"
-          cp -f "$ZYGISK_SO" "$MODULE_BUILD_DIR/zygisk/arm64-v8a.so" && chmod 644 "$MODULE_BUILD_DIR/zygisk/arm64-v8a.so"
+          cp -f "$ZYGISK_SO" "$MODULE_BUILD_DIR/zygisk/armeabi-v7a.so" && chmod 644 "$MODULE_BUILD_DIR/zygisk/armeabi-v7a.so"
 
           cp -f "$ZDTD_BIN" "$MODULE_BUILD_DIR/bin/zdtd" && chmod 755 "$MODULE_BUILD_DIR/bin/zdtd"
           cp -f "$T2S_BIN"  "$MODULE_BUILD_DIR/bin/t2s"  && chmod 755 "$MODULE_BUILD_DIR/bin/t2s"
@@ -1616,18 +1650,18 @@ jobs:
             mkdir -p "$MODULE_BUILD_DIR/verify_sum/$(dirname "$rel")"
             (cd "$MODULE_BUILD_DIR" && sha256sum "$rel" > "verify_sum/$rel.sha256")
           done < <(find "$MODULE_BUILD_DIR/bin" -maxdepth 1 -type f | sort)
-          (cd "$MODULE_BUILD_DIR" && sha256sum 'zygisk/arm64-v8a.so' > 'verify_sum/zygisk/arm64-v8a.so.sha256')
+          (cd "$MODULE_BUILD_DIR" && sha256sum 'zygisk/armeabi-v7a.so' > 'verify_sum/zygisk/armeabi-v7a.so.sha256')
           test -s "$MODULE_BUILD_DIR/verify_sum/bin/zdtd.sha256" || { echo "::error::verify_sum/bin/zdtd.sha256 missing"; exit 1; }
-          test -s "$MODULE_BUILD_DIR/verify_sum/zygisk/arm64-v8a.so.sha256" || { echo "::error::verify_sum/zygisk/arm64-v8a.so.sha256 missing"; exit 1; }
+          test -s "$MODULE_BUILD_DIR/verify_sum/zygisk/armeabi-v7a.so.sha256" || { echo "::error::verify_sum/zygisk/armeabi-v7a.so.sha256 missing"; exit 1; }
 
           pushd "$MODULE_BUILD_DIR" > /dev/null
           zip -qr "../../../$MODULE_ZIP" .
           popd > /dev/null
 
           ZIP_ENTRIES="$(unzip -Z1 "$MODULE_ZIP" 2>/dev/null)" || { echo "::error::Unable to read raw module zip"; exit 1; }
-          printf '%s\n' "$ZIP_ENTRIES" | grep -Fx 'zygisk/arm64-v8a.so' >/dev/null || { echo "::error::Zygisk binary missing in module zip"; exit 1; }
+          printf '%s\n' "$ZIP_ENTRIES" | grep -Fx 'zygisk/armeabi-v7a.so' >/dev/null || { echo "::error::Zygisk binary missing in module zip"; exit 1; }
           printf '%s\n' "$ZIP_ENTRIES" | grep -Fx 'verify.sh' >/dev/null || { echo "::error::verify.sh missing in module zip"; exit 1; }
-          printf '%s\n' "$ZIP_ENTRIES" | grep -Fx 'verify_sum/zygisk/arm64-v8a.so.sha256' >/dev/null || { echo "::error::zygisk verify_sum missing in module zip"; exit 1; }
+          printf '%s\n' "$ZIP_ENTRIES" | grep -Fx 'verify_sum/zygisk/armeabi-v7a.so.sha256' >/dev/null || { echo "::error::zygisk verify_sum missing in module zip"; exit 1; }
           printf '%s\n' "$ZIP_ENTRIES" | grep -Fx 'verify_sum/bin/zdtd.sha256' >/dev/null || { echo "::error::zdtd verify_sum missing in module zip"; exit 1; }
           if printf '%s\n' "$ZIP_ENTRIES" | grep -Fx 'bin/dpi-detector' >/dev/null; then
             echo "::error::dpi-detector must not be packed into module zip; it belongs to APK assets"
@@ -1671,7 +1705,7 @@ jobs:
       - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android
+          targets: armv7-linux-androideabi
 
       - name: Install Android NDK cross-linker
         run: |
@@ -1685,8 +1719,8 @@ jobs:
             NDK_ROOT="$ANDROID_SDK_ROOT/ndk/$(ls "$ANDROID_SDK_ROOT/ndk" | sort -V | tail -1)"
           fi
           NDK_BIN="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
-          ANDROID_CC="$NDK_BIN/aarch64-linux-android21-clang"
-          ANDROID_CXX="$NDK_BIN/aarch64-linux-android21-clang++"
+          ANDROID_CC="$NDK_BIN/armv7a-linux-androideabi21-clang"
+          ANDROID_CXX="$NDK_BIN/armv7a-linux-androideabi21-clang++"
           ANDROID_AR="$NDK_BIN/llvm-ar"
           ANDROID_RANLIB="$NDK_BIN/llvm-ranlib"
 
@@ -1700,7 +1734,6 @@ jobs:
             echo "ANDROID_NDK_ROOT=$NDK_ROOT"
             echo "ANDROID_NDK_HOME=$NDK_ROOT"
             echo "PATH=$NDK_BIN:$PATH"
-            echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$ANDROID_CC"
             echo "CC_aarch64_linux_android=$ANDROID_CC"
             echo "CXX_aarch64_linux_android=$ANDROID_CXX"
             echo "AR_aarch64_linux_android=$ANDROID_AR"
@@ -1709,7 +1742,7 @@ jobs:
 
           mkdir -p ~/.cargo
           cat >> ~/.cargo/config.toml <<EOF2
-          [target.aarch64-linux-android]
+          [target.armv7-linux-androideabi]
           linker = "$ANDROID_CC"
           ar = "$ANDROID_AR"
           EOF2
@@ -1721,18 +1754,21 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             rust/target
-          key: cargo-dpi-detector-aarch64-linux-android-${{ hashFiles('rust/Cargo.lock', 'rust/dpi-detector/Cargo.toml') }}
+          key: cargo-dpi-detector-armv7-linux-androideabi-${{ hashFiles('rust/Cargo.lock', 'rust/dpi-detector/Cargo.toml') }}
           restore-keys: |
-            cargo-dpi-detector-aarch64-linux-android-
-            cargo-aarch64-linux-android-
+            cargo-dpi-detector-armv7-linux-androideabi-
+            cargo-armv7-linux-androideabi-
 
       - name: Verify Android Rust cross toolchain
+        env:
+          ANDROID_CC: ${{ env.CC_aarch64_linux_android }}
+          ANDROID_AR: ${{ env.AR_aarch64_linux_android }}
         run: |
           set -euo pipefail
           echo "NDK_ROOT=$NDK_ROOT"
-          "$CC_aarch64_linux_android" --version | head -1
-          "$AR_aarch64_linux_android" --version | head -1
-          rustc --print target-list | grep -qx '${{ env.CARGO_BUILD_TARGET }}'
+          "$ANDROID_CC" --version | head -1
+          "$ANDROID_AR" --version | head -1
+          rustc --print target-list | grep -qx 'armv7-linux-androideabi'
           cargo -V
           rustc -V
 
@@ -1744,8 +1780,10 @@ jobs:
           RUSTFLAGS: ""
           CARGO_ENCODED_RUSTFLAGS: ""
           RUSTC_WRAPPER: ""
+          CC_armv7-linux-androideabi: ${{ env.CC_aarch64_linux_android }}
+          CFLAGS_armv7-linux-androideabi: "-D__ANDROID_API__=21"
+          AR_armv7-linux-androideabi: ${{ env.AR_aarch64_linux_android }}
         run: |
-          set -euo pipefail
           cargo build --manifest-path rust/dpi-detector/Cargo.toml --profile "${{ env.CARGO_PROFILE }}" --target "${{ env.CARGO_BUILD_TARGET }}"
 
       - name: Collect dpi-detector
@@ -1762,7 +1800,7 @@ jobs:
       - name: Upload dpi-detector binary
         uses: actions/upload-artifact@v7
         with:
-          name: dpi-detector-arm64
+          name: dpi-detector-armeabi-v7a
           path: out/artifacts/dpi-detector/dpi-detector
           retention-days: 1
 
@@ -1784,7 +1822,7 @@ jobs:
       - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android
+          targets: armv7-linux-androideabi
 
       - name: Install Android NDK cross-linker
         run: |
@@ -1798,8 +1836,8 @@ jobs:
             NDK_ROOT="$ANDROID_SDK_ROOT/ndk/$(ls "$ANDROID_SDK_ROOT/ndk" | sort -V | tail -1)"
           fi
           NDK_BIN="$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
-          ANDROID_CC="$NDK_BIN/aarch64-linux-android21-clang"
-          ANDROID_CXX="$NDK_BIN/aarch64-linux-android21-clang++"
+          ANDROID_CC="$NDK_BIN/armv7a-linux-androideabi21-clang"
+          ANDROID_CXX="$NDK_BIN/armv7a-linux-androideabi21-clang++"
           ANDROID_AR="$NDK_BIN/llvm-ar"
           ANDROID_RANLIB="$NDK_BIN/llvm-ranlib"
 
@@ -1813,7 +1851,6 @@ jobs:
             echo "ANDROID_NDK_ROOT=$NDK_ROOT"
             echo "ANDROID_NDK_HOME=$NDK_ROOT"
             echo "PATH=$NDK_BIN:$PATH"
-            echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$ANDROID_CC"
             echo "CC_aarch64_linux_android=$ANDROID_CC"
             echo "CXX_aarch64_linux_android=$ANDROID_CXX"
             echo "AR_aarch64_linux_android=$ANDROID_AR"
@@ -1822,7 +1859,7 @@ jobs:
 
           mkdir -p ~/.cargo
           cat >> ~/.cargo/config.toml <<EOF2
-          [target.aarch64-linux-android]
+          [target.armv7-linux-androideabi]
           linker = "$ANDROID_CC"
           ar = "$ANDROID_AR"
           EOF2
@@ -1834,18 +1871,21 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             rust/target
-          key: cargo-nfqws-tester-aarch64-linux-android-${{ hashFiles('rust/Cargo.lock', 'rust/nfqws-tester/Cargo.toml') }}
+          key: cargo-nfqws-tester-armv7-linux-androideabi-${{ hashFiles('rust/Cargo.lock', 'rust/nfqws-tester/Cargo.toml') }}
           restore-keys: |
-            cargo-nfqws-tester-aarch64-linux-android-
-            cargo-aarch64-linux-android-
+            cargo-nfqws-tester-armv7-linux-androideabi-
+            cargo-armv7-linux-androideabi-
 
       - name: Verify Android Rust cross toolchain
+        env:
+          ANDROID_CC: ${{ env.CC_aarch64_linux_android }}
+          ANDROID_AR: ${{ env.AR_aarch64_linux_android }}
         run: |
           set -euo pipefail
           echo "NDK_ROOT=$NDK_ROOT"
-          "$CC_aarch64_linux_android" --version | head -1
-          "$AR_aarch64_linux_android" --version | head -1
-          rustc --print target-list | grep -qx '${{ env.CARGO_BUILD_TARGET }}'
+          "$ANDROID_CC" --version | head -1
+          "$ANDROID_AR" --version | head -1
+          rustc --print target-list | grep -qx 'armv7-linux-androideabi'
           cargo -V
           rustc -V
 
@@ -1857,8 +1897,10 @@ jobs:
           RUSTFLAGS: ""
           CARGO_ENCODED_RUSTFLAGS: ""
           RUSTC_WRAPPER: ""
+          CC_armv7-linux-androideabi: ${{ env.CC_aarch64_linux_android }}
+          CFLAGS_armv7-linux-androideabi: "-D__ANDROID_API__=21"
+          AR_armv7-linux-androideabi: ${{ env.AR_aarch64_linux_android }}
         run: |
-          set -euo pipefail
           cargo build --manifest-path rust/nfqws-tester/Cargo.toml --profile "${{ env.CARGO_PROFILE }}" --target "${{ env.CARGO_BUILD_TARGET }}"
 
       - name: Collect nfqws-tester
@@ -1875,12 +1917,12 @@ jobs:
       - name: Upload nfqws-tester binary
         uses: actions/upload-artifact@v7
         with:
-          name: nfqws-tester-arm64
+          name: nfqws-tester-armeabi-v7a
           path: out/artifacts/nfqws-tester/nfqws-tester
           retention-days: 1
 
   build_busybox:
-    name: 4 APK tool / build BusyBox arm64
+    name: 4 APK tool / build BusyBox armeabi-v7a
     runs-on: ubuntu-latest
     needs: build_gate
     if: needs.build_gate.outputs.should_build == 'true'
@@ -1909,20 +1951,20 @@ jobs:
           echo "ANDROID_NDK_ROOT=$NDK_ROOT" >> "$GITHUB_ENV"
           echo "ANDROID_NDK_HOME=$NDK_ROOT" >> "$GITHUB_ENV"
 
-      - name: Build BusyBox arm64 from source
+      - name: Build BusyBox armeabi-v7a from source
         run: |
           set -euo pipefail
-          bash scripts/module/build-busybox-arm64.sh prebuilt/bin/arm64-v8a/busybox
-          ls -lh prebuilt/bin/arm64-v8a/busybox
-          test -s prebuilt/bin/arm64-v8a/busybox
+          bash scripts/module/build-busybox-armeabi-v7a.sh prebuilt/bin/armeabi-v7a/busybox
+          ls -lh prebuilt/bin/armeabi-v7a/busybox
+          test -s prebuilt/bin/armeabi-v7a/busybox
 
       - name: Upload BusyBox binary
         uses: actions/upload-artifact@v7
         with:
-          name: busybox-arm64
+          name: busybox-armeabi-v7a
           path: |
-            prebuilt/bin/arm64-v8a/busybox
-            prebuilt/bin/arm64-v8a/busybox.source
+            prebuilt/bin/armeabi-v7a/busybox
+            prebuilt/bin/armeabi-v7a/busybox.source
           retention-days: 1
 
   apk_tools_ready:
@@ -1998,27 +2040,27 @@ jobs:
       - name: Download dpi-detector binary
         uses: actions/download-artifact@v7
         with:
-          name: dpi-detector-arm64
+          name: dpi-detector-armeabi-v7a
           path: out/artifacts/dpi-detector
 
       - name: Download nfqws-tester binary
         uses: actions/download-artifact@v7
         with:
-          name: nfqws-tester-arm64
+          name: nfqws-tester-armeabi-v7a
           path: out/artifacts/nfqws-tester
 
       - name: Download BusyBox binary
         uses: actions/download-artifact@v7
         with:
-          name: busybox-arm64
-          path: prebuilt/bin/arm64-v8a
+          name: busybox-armeabi-v7a
+          path: prebuilt/bin/armeabi-v7a
 
       - name: Verify BusyBox artifact
         run: |
           set -euo pipefail
-          test -s prebuilt/bin/arm64-v8a/busybox
-          chmod 755 prebuilt/bin/arm64-v8a/busybox
-          ls -lh prebuilt/bin/arm64-v8a/busybox
+          test -s prebuilt/bin/armeabi-v7a/busybox
+          chmod 755 prebuilt/bin/armeabi-v7a/busybox
+          ls -lh prebuilt/bin/armeabi-v7a/busybox
 
       - name: Locate Android project root
         run: |
@@ -2075,7 +2117,7 @@ jobs:
         run: |
           set -euo pipefail
           SRC="out/artifacts/dpi-detector/dpi-detector"
-          DST="application/app/build/generated/zdt-assets/main/dpi-detector/arm64-v8a/dpi-detector"
+          DST="application/app/build/generated/zdt-assets/main/dpi-detector/armeabi-v7a/dpi-detector"
           test -s "$SRC" || { echo "::error::dpi-detector artifact missing: $SRC"; exit 1; }
           mkdir -p "$(dirname "$DST")"
           cp -f "$SRC" "$DST"
@@ -2086,7 +2128,7 @@ jobs:
         run: |
           set -euo pipefail
           SRC="out/artifacts/nfqws-tester/nfqws-tester"
-          DST="application/app/build/generated/zdt-assets/main/nfqws-tester/arm64-v8a/nfqws_tester"
+          DST="application/app/build/generated/zdt-assets/main/nfqws-tester/armeabi-v7a/nfqws_tester"
           test -s "$SRC" || { echo "::error::nfqws_tester artifact missing: $SRC"; exit 1; }
           mkdir -p "$(dirname "$DST")"
           cp -f "$SRC" "$DST"
@@ -2119,11 +2161,11 @@ jobs:
             printf '%s\n' "$APK_ENTRIES" | head -80 || true
             exit 1
           fi
-          printf '%s\n' "$APK_ENTRIES" | grep -Fx 'assets/dpi-detector/arm64-v8a/dpi-detector' >/dev/null || { echo "::error::dpi-detector APK asset missing"; exit 1; }
-          printf '%s\n' "$APK_ENTRIES" | grep -Fx 'assets/nfqws-tester/arm64-v8a/nfqws_tester' >/dev/null || { echo "::error::nfqws_tester APK asset missing"; exit 1; }
-          printf '%s\n' "$APK_ENTRIES" | grep -Fx 'assets/busybox/busybox-arm64' >/dev/null || { echo "::error::bundled BusyBox APK asset missing"; exit 1; }
-          printf '%s\n' "$APK_ENTRIES" | grep -Fx 'assets/busybox/busybox-arm64.sha256' >/dev/null || { echo "::error::bundled BusyBox SHA-256 APK asset missing"; exit 1; }
-          printf '%s\n' "$APK_ENTRIES" | grep -Fx 'assets/busybox/busybox-arm64.source' >/dev/null || { echo "::error::bundled BusyBox source APK asset missing"; exit 1; }
+          printf '%s\n' "$APK_ENTRIES" | grep -Fx 'assets/dpi-detector/armeabi-v7a/dpi-detector' >/dev/null || { echo "::error::dpi-detector APK asset missing"; exit 1; }
+          printf '%s\n' "$APK_ENTRIES" | grep -Fx 'assets/nfqws-tester/armeabi-v7a/nfqws_tester' >/dev/null || { echo "::error::nfqws_tester APK asset missing"; exit 1; }
+          printf '%s\n' "$APK_ENTRIES" | grep -Fx 'assets/busybox/busybox-armeabi-v7a' >/dev/null || { echo "::error::bundled BusyBox APK asset missing"; exit 1; }
+          printf '%s\n' "$APK_ENTRIES" | grep -Fx 'assets/busybox/busybox-armeabi-v7a.sha256' >/dev/null || { echo "::error::bundled BusyBox SHA-256 APK asset missing"; exit 1; }
+          printf '%s\n' "$APK_ENTRIES" | grep -Fx 'assets/busybox/busybox-armeabi-v7a.source' >/dev/null || { echo "::error::bundled BusyBox source APK asset missing"; exit 1; }
           printf '%s\n' "$APK_ENTRIES" | grep -Fx 'assets/busybox/zdt_module.sha256' >/dev/null || { echo "::error::module SHA-256 APK asset missing"; exit 1; }
           printf '%s\n' "$APK_ENTRIES" | grep -Fx 'assets/busybox/zdt_module.cache' >/dev/null || { echo "::error::module cache APK asset missing"; exit 1; }
 
@@ -2156,7 +2198,7 @@ jobs:
     needs:
       - build_gate
       - build_apk
-    if: github.ref == 'refs/heads/main' && needs.build_apk.result == 'success'
+    if: github.ref == 'refs/heads/armv7' && needs.build_apk.result == 'success'
 
     steps:
       - name: Checkout repository
@@ -2211,7 +2253,7 @@ jobs:
           REPO_URL="https://github.com/${{ github.repository }}"
           RUN_URL="${REPO_URL}/actions/runs/${{ github.run_id }}"
           BUILD_TYPE="${{ env.BUILD_TYPE }}"
-          BRANCH_NAME="${GITHUB_REF_NAME:-main}"
+          BRANCH_NAME="${GITHUB_REF_NAME:-armv7}"
 
           git fetch --tags --force >/dev/null 2>&1 || true
 

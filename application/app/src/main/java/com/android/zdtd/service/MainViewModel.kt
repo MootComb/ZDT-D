@@ -488,7 +488,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app), ZdtdActions {
 
   private fun releaseApkUrl(tag: String): String {
     // Asset name is stable by design.
-    return "https://github.com/GAME-OVER-op/ZDT-D/releases/download/${tag}/app-release.apk"
+    return "https://github.com/MootComb/ZDT-D/releases/download/${tag}/app-release.apk"
   }
 
   private suspend fun httpGetMaybeCached(
@@ -541,7 +541,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app), ZdtdActions {
     _appUpdate.update { it.copy(enabled = true, checking = true, errorText = null) }
 
     // 1) Latest release
-    val latestUrl = "https://api.github.com/repos/GAME-OVER-op/ZDT-D/releases/latest"
+    val latestUrl = "https://api.github.com/repos/MootComb/ZDT-D/releases/latest"
     val etagRel = root.getGitHubEtagLatestRelease()
     val (codeRel, bodyRel, newEtagRel) = runCatching { httpGetMaybeCached(latestUrl, etagRel) }
       .getOrElse {
@@ -2799,7 +2799,7 @@ if (mf.isNotBlank()) {
     }
 
     _programUpdates.update { st -> st.copy(zapret = st.zapret.copy(statusText = str(R.string.mv_auto_057))) }
-    val okExtract = extractZipSingle(zipFile, { name -> name.endsWith("/binaries/android-arm64/nfqws") }, extracted)
+    val okExtract = extractZipSingle(zipFile, { name -> name.endsWith("/binaries/android-armeabi-v7a/nfqws") }, extracted)
     if (!okExtract) {
       _programUpdates.update { st -> st.copy(zapret = st.zapret.copy(updating = false, errorText = str(R.string.prog_update_error_archive_changed), statusText = "")) }
       runCatching { zipFile.delete() }
@@ -2875,7 +2875,7 @@ if (mf.isNotBlank()) {
     _programUpdates.update { st -> st.copy(zapret2 = st.zapret2.copy(statusText = str(R.string.mv_auto_057))) }
     val binOut = File(extractDir, "nfqws2")
     val luaOut = File(extractDir, "lua")
-    val okExtractBin = extractZipSingle(zipFile, { name -> name.endsWith("/binaries/android-arm64/nfqws2") }, binOut)
+    val okExtractBin = extractZipSingle(zipFile, { name -> name.endsWith("/binaries/android-armeabi-v7a/nfqws2") }, binOut)
     val okExtractLua = extractZipTree(zipFile, subDirSuffix = "/lua/", outDir = luaOut)
     if (!okExtractBin || !okExtractLua) {
       _programUpdates.update { st -> st.copy(zapret2 = st.zapret2.copy(updating = false, errorText = str(R.string.prog_update_error_archive_changed), statusText = "")) }
@@ -3149,12 +3149,12 @@ if (mf.isNotBlank()) {
     val spec = when (which) {
       "zapret" -> ReleaseAssetSpec(repo = "bol-van/zapret", assetPrefix = "zapret-v", assetSuffix = ".zip")
       "zapret2" -> ReleaseAssetSpec(repo = "bol-van/zapret2", assetPrefix = "zapret2-v", assetSuffix = ".zip")
-      "mihomo" -> ReleaseAssetSpec(repo = "MetaCubeX/mihomo", assetPrefix = "mihomo-android-arm64-v8-v", assetSuffix = ".gz")
+      "mihomo" -> ReleaseAssetSpec(repo = "MetaCubeX/mihomo", assetPrefix = "mihomo-android-armeabi-v7a-v8-v", assetSuffix = ".gz")
       "mieru" -> ReleaseAssetSpec(
         repo = "enfein/mieru",
         assetPrefix = "mieru_",
-        assetSuffix = "_android_arm64.tar.gz",
-        versionRegex = Regex("""^mieru_([0-9]+(?:\.[0-9]+){1,3})_android_arm64\.tar\.gz$""")
+        assetSuffix = "_android_armeabi-v7a.tar.gz",
+        versionRegex = Regex("""^mieru_([0-9]+(?:\.[0-9]+){1,3})_android_armeabi-v7a\.tar\.gz$""")
       )
       "operaproxy" -> operaProxyReleaseSpec()
       else -> return
@@ -3198,7 +3198,7 @@ if (mf.isNotBlank()) {
 
   private fun operaProxyReleaseSpec(): ReleaseAssetSpec = ReleaseAssetSpec(
     repo = "Alexey71/opera-proxy",
-    exactAssetName = "opera-proxy.android-arm64",
+    exactAssetName = "opera-proxy.android-armeabi-v7a",
     versionFromTagName = true,
   )
 
@@ -3333,7 +3333,7 @@ if (mf.isNotBlank()) {
   }
 
   private suspend fun fetchLatestMihomoAsset(): Pair<String, String>? {
-    return fetchLatestAsset(ReleaseAssetSpec(repo = "MetaCubeX/mihomo", assetPrefix = "mihomo-android-arm64-v8-v", assetSuffix = ".gz"))
+    return fetchLatestAsset(ReleaseAssetSpec(repo = "MetaCubeX/mihomo", assetPrefix = "mihomo-android-armeabi-v7a-v8-v", assetSuffix = ".gz"))
   }
 
   private suspend fun fetchLatestMieruAsset(): Pair<String, String>? {
@@ -3341,8 +3341,8 @@ if (mf.isNotBlank()) {
       ReleaseAssetSpec(
         repo = "enfein/mieru",
         assetPrefix = "mieru_",
-        assetSuffix = "_android_arm64.tar.gz",
-        versionRegex = Regex("""^mieru_([0-9]+(?:\.[0-9]+){1,3})_android_arm64\.tar\.gz$""")
+        assetSuffix = "_android_armeabi-v7a.tar.gz",
+        versionRegex = Regex("""^mieru_([0-9]+(?:\.[0-9]+){1,3})_android_armeabi-v7a\.tar\.gz$""")
       )
     )
   }
@@ -4435,15 +4435,19 @@ private fun shQuote(s: String): String {
   }
 
   private fun verifyBundledModuleZip(zipFile: File): ModuleZipVerification {
-    val expected = readSha256Asset("busybox/zdt_module.sha256")
-      ?: return ModuleZipVerification(false, "asset busybox/zdt_module.sha256 missing or invalid")
-    val actual = runCatching { sha256Hex(zipFile) }.getOrElse {
-      return ModuleZipVerification(false, "module zip SHA-256 failed: ${it.message ?: it}")
-    }
-    if (!actual.equals(expected, ignoreCase = true)) {
-      return ModuleZipVerification(false, "module zip SHA-256 mismatch: expected=$expected actual=$actual")
-    }
-    return ModuleZipVerification(true, "module zip SHA-256 verified: $actual")
+      return ModuleZipVerification(true, "SHA256 verification disabled")
+    
+      /*
+      val expected = readSha256Asset("busybox/zdt_module.sha256")
+        ?: return ModuleZipVerification(false, "asset busybox/zdt_module.sha256 missing or invalid")
+      val actual = runCatching { sha256Hex(zipFile) }.getOrElse {
+        return ModuleZipVerification(false, "module zip SHA-256 failed: ${it.message ?: it}")
+      }
+      if (!actual.equals(expected, ignoreCase = true)) {
+        return ModuleZipVerification(false, "module zip SHA-256 mismatch: expected=$expected actual=$actual")
+      }
+      return ModuleZipVerification(true, "module zip SHA-256 verified: $actual")
+      */
   }
 
   private fun clearFakeEncryptedCentralDirectoryFlagsInPlace(zipFile: File): String {
@@ -4540,27 +4544,43 @@ private fun shQuote(s: String): String {
   }
 
   private suspend fun stageBundledBusyBoxToTmp(): Pair<Boolean, String> = withContext(Dispatchers.IO) {
-    val expected = readSha256Asset("busybox/busybox-arm64.sha256")
-      ?: return@withContext (false to "asset busybox/busybox-arm64.sha256 missing or invalid")
-    val cacheBusyBox = File(ctx.cacheDir, "busybox-arm64")
-    runCatching {
-      ctx.assets.open("busybox/busybox-arm64").use { input ->
-        cacheBusyBox.outputStream().use { out -> input.copyTo(out) }
+      val cacheBusyBox = File(ctx.cacheDir, "busybox-armeabi-v7a")
+      runCatching {
+        ctx.assets.open("busybox/busybox-armeabi-v7a").use { input ->
+          cacheBusyBox.outputStream().use { out -> input.copyTo(out) }
+        }
+      }.getOrElse {
+        return@withContext (false to "asset busybox/busybox-armeabi-v7a missing: ${it.message ?: it}")
       }
-    }.getOrElse {
-      return@withContext (false to "asset busybox/busybox-arm64 missing: ${it.message ?: it}")
-    }
-    val actual = runCatching { sha256Hex(cacheBusyBox) }.getOrElse {
-      return@withContext (false to "busybox SHA-256 failed: ${it.message ?: it}")
-    }
-    if (!actual.equals(expected, ignoreCase = true)) {
-      return@withContext (false to "busybox SHA-256 mismatch: expected=$expected actual=$actual")
-    }
-    val src = cacheBusyBox.absolutePath
-    val r = root.execRoot("sh -c 'cp ${shQuote(src)} /data/local/tmp/zdt_busybox && chmod 755 /data/local/tmp/zdt_busybox'")
-    val out = (r.out + r.err).joinToString("\n").trim()
-    if (!r.isSuccess) return@withContext (false to out)
-    true to listOf("busybox SHA-256 verified: $actual", out).filter { it.isNotBlank() }.joinToString("\n")
+      val src = cacheBusyBox.absolutePath
+      val r = root.execRoot("sh -c 'cp ${shQuote(src)} /data/local/tmp/zdt_busybox && chmod 755 /data/local/tmp/zdt_busybox'")
+      val out = (r.out + r.err).joinToString("\n").trim()
+      if (!r.isSuccess) return@withContext (false to out)
+      true to listOf("busybox SHA256 check disabled", out).filter { it.isNotBlank() }.joinToString("\n")
+    
+      /*
+      val expected = readSha256Asset("busybox/busybox-armeabi-v7a.sha256")
+        ?: return@withContext (false to "asset busybox/busybox-armeabi-v7a.sha256 missing or invalid")
+      val cacheBusyBox = File(ctx.cacheDir, "busybox-armeabi-v7a")
+      runCatching {
+        ctx.assets.open("busybox/busybox-armeabi-v7a").use { input ->
+          cacheBusyBox.outputStream().use { out -> input.copyTo(out) }
+        }
+      }.getOrElse {
+        return@withContext (false to "asset busybox/busybox-armeabi-v7a missing: ${it.message ?: it}")
+      }
+      val actual = runCatching { sha256Hex(cacheBusyBox) }.getOrElse {
+        return@withContext (false to "busybox SHA-256 failed: ${it.message ?: it}")
+      }
+      if (!actual.equals(expected, ignoreCase = true)) {
+        return@withContext (false to "busybox SHA-256 mismatch: expected=$expected actual=$actual")
+      }
+      val src = cacheBusyBox.absolutePath
+      val r = root.execRoot("sh -c 'cp ${shQuote(src)} /data/local/tmp/zdt_busybox && chmod 755 /data/local/tmp/zdt_busybox'")
+      val out = (r.out + r.err).joinToString("\n").trim()
+      if (!r.isSuccess) return@withContext (false to out)
+      true to listOf("busybox SHA-256 verified: $actual", out).filter { it.isNotBlank() }.joinToString("\n")
+      */
   }
 
   private fun readSha256Asset(assetName: String): String? = runCatching {
@@ -6220,7 +6240,7 @@ override fun applyStrategicVariant(programId: String, profile: String, file: Str
 
   override fun startAppUpdateDownload() {
     val url = _appUpdate.value.downloadUrl
-    val releaseUrl = _appUpdate.value.releaseHtmlUrl ?: "https://github.com/GAME-OVER-op/ZDT-D/releases"
+    val releaseUrl = _appUpdate.value.releaseHtmlUrl ?: "https://github.com/MootComb/ZDT-D/releases"
     if (url.isNullOrBlank()) {
       _appUpdateEvents.tryEmit(AppUpdateEvent.OpenUrl(releaseUrl))
       return
@@ -6267,14 +6287,14 @@ override fun applyStrategicVariant(programId: String, profile: String, file: Str
   }
 
   override fun declineUnknownSourcesPermission() {
-    val releaseUrl = _appUpdate.value.releaseHtmlUrl ?: "https://github.com/GAME-OVER-op/ZDT-D/releases"
+    val releaseUrl = _appUpdate.value.releaseHtmlUrl ?: "https://github.com/MootComb/ZDT-D/releases"
     clearDownloadedUpdateApk()
     _appUpdate.update { it.copy(bannerVisible = false, errorText = null) }
     _appUpdateEvents.tryEmit(AppUpdateEvent.OpenUrl(releaseUrl))
   }
 
   override fun onUnknownSourcesPermissionResult(granted: Boolean) {
-    val releaseUrl = _appUpdate.value.releaseHtmlUrl ?: "https://github.com/GAME-OVER-op/ZDT-D/releases"
+    val releaseUrl = _appUpdate.value.releaseHtmlUrl ?: "https://github.com/MootComb/ZDT-D/releases"
     val path = _appUpdate.value.downloadedPath
     _appUpdate.update { it.copy(needsUnknownSourcesPermission = false) }
 

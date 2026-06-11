@@ -62,6 +62,6 @@ class NfqwsTesterBinary(private val context: Context) {
 
     companion object {
         const val BINARY_NAME = "nfqws_tester"
-        const val ASSET_PATH = "nfqws-tester/arm64-v8a/nfqws_tester"
+        const val ASSET_PATH = "nfqws-tester/armeabi-v7a/nfqws_tester"
     }
 }
