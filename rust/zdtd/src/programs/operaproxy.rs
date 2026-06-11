@@ -492,33 +492,27 @@ pub fn start_if_enabled() -> Result<()> {
     // - mobile/wifi lists apply to specified interfaces from port.json
     let opt = DpiTunnelOptions { port_preference: 1, ..DpiTunnelOptions::default() };
 
-    if resolved_user > 0 {
-        iptables_port::apply(
-            Path::new(APP_OUT_USER),
-            port_cfg.t2s_port,
-            ProtoChoice::Tcp,
-            None,
-            opt.clone(),
-        )?;
-    }
-    if resolved_mobile > 0 {
-        iptables_port::apply(
-            Path::new(APP_OUT_MOBILE),
-            port_cfg.t2s_port,
-            ProtoChoice::Tcp,
-            Some(port_cfg.iface_mobile.as_str()),
-            opt.clone(),
-        )?;
-    }
-    if resolved_wifi > 0 {
-        iptables_port::apply(
-            Path::new(APP_OUT_WIFI),
-            port_cfg.t2s_port,
-            ProtoChoice::Tcp,
-            Some(port_cfg.iface_wifi.as_str()),
-            opt,
-        )?;
-    }
+    iptables_port::apply(
+        Path::new(APP_OUT_USER),
+        port_cfg.t2s_port,
+        ProtoChoice::Tcp,
+        None,
+        opt.clone(),
+    )?;
+    iptables_port::apply(
+        Path::new(APP_OUT_MOBILE),
+        port_cfg.t2s_port,
+        ProtoChoice::Tcp,
+        Some(port_cfg.iface_mobile.as_str()),
+        opt.clone(),
+    )?;
+    iptables_port::apply(
+        Path::new(APP_OUT_WIFI),
+        port_cfg.t2s_port,
+        ProtoChoice::Tcp,
+        Some(port_cfg.iface_wifi.as_str()),
+        opt,
+    )?;
 
     info!("operaproxy: started successfully");
     Ok(())
@@ -1359,6 +1353,12 @@ fn spawn_t2s(bin: &Path, listen_addr: &str, listen_port: u16, socks_ports_csv: &
         .arg("30")
         .arg("--enable-http2")
         .arg("--web-socket")
+        .arg("--program")
+        .arg("operaproxy")
+        .arg("--profile")
+        .arg("main")
+        .arg("--scope")
+        .arg("program/operaproxy")
         .stdin(Stdio::null())
         .stdout(Stdio::from(logf))
         .stderr(Stdio::from(logf_err));

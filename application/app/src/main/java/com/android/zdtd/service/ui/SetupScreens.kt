@@ -45,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -71,12 +72,43 @@ private fun needsUnofficialAndroidInstallWarning(): Boolean {
   return Build.VERSION.SDK_INT in Build.VERSION_CODES.P until Build.VERSION_CODES.R
 }
 
+@Composable
+private fun setupIsLightTheme(): Boolean = MaterialTheme.colorScheme.background.luminance() > 0.5f
+
+@Composable
+private fun setupTopBarColor() = if (setupIsLightTheme()) {
+  MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.96f)
+} else {
+  MaterialTheme.colorScheme.surface.copy(alpha = 0.96f)
+}
+
+@Composable
+private fun setupPanelColor(alpha: Float = 0.86f) = if (setupIsLightTheme()) {
+  MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = alpha)
+} else {
+  MaterialTheme.colorScheme.surfaceVariant.copy(alpha = alpha)
+}
+
+@Composable
+private fun setupPanelAccentWash(accent: androidx.compose.ui.graphics.Color, alpha: Float) = if (setupIsLightTheme()) {
+  accent.copy(alpha = alpha.coerceAtMost(0.08f))
+} else {
+  accent.copy(alpha = alpha)
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SetupScaffold(content: @Composable (PaddingValues) -> Unit) {
+  val scheme = MaterialTheme.colorScheme
   Scaffold(
+    containerColor = scheme.background,
     topBar = {
       CenterAlignedTopAppBar(
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+          containerColor = setupTopBarColor(),
+          scrolledContainerColor = setupTopBarColor(),
+          titleContentColor = scheme.onSurface,
+        ),
         title = {
           Text(
             stringResource(R.string.app_name),
@@ -425,7 +457,7 @@ fun InstallModuleScreen(
           Spacer(Modifier.height(12.dp))
           Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+            colors = CardDefaults.cardColors(containerColor = setupPanelColor(0.92f)),
           ) {
             if (compact) {
               Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -596,7 +628,7 @@ fun InstallModuleScreen(
             Spacer(Modifier.height(14.dp))
             Card(
               modifier = Modifier.fillMaxWidth(),
-              colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+              colors = CardDefaults.cardColors(containerColor = setupPanelColor(0.92f)),
             ) {
               Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(
@@ -666,7 +698,7 @@ fun InstallModuleScreen(
           Spacer(Modifier.height(18.dp))
           Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+            colors = CardDefaults.cardColors(containerColor = setupPanelColor(0.92f)),
           ) {
             Column(Modifier.padding(14.dp)) {
               Text(stringResource(R.string.setup_zip_saved_title), fontWeight = FontWeight.SemiBold)
@@ -756,19 +788,25 @@ private fun SetupScreenBackground(
   padding: PaddingValues,
   content: @Composable BoxScope.() -> Unit,
 ) {
+  val scheme = MaterialTheme.colorScheme
+  val gradientStops = if (setupIsLightTheme()) {
+    listOf(
+      scheme.primaryContainer.copy(alpha = 0.34f),
+      scheme.surfaceContainerLow.copy(alpha = 0.98f),
+      scheme.secondaryContainer.copy(alpha = 0.30f),
+    )
+  } else {
+    listOf(
+      scheme.primary.copy(alpha = 0.10f),
+      scheme.surface.copy(alpha = 0.98f),
+      scheme.secondary.copy(alpha = 0.08f),
+    )
+  }
   Box(
     modifier = Modifier
       .fillMaxSize()
       .padding(padding)
-      .background(
-        Brush.linearGradient(
-          listOf(
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
-            MaterialTheme.colorScheme.surface.copy(alpha = 0.98f),
-            MaterialTheme.colorScheme.secondary.copy(alpha = 0.08f),
-          ),
-        ),
-      ),
+      .background(Brush.linearGradient(gradientStops)),
     contentAlignment = Alignment.Center,
     content = content,
   )
@@ -778,7 +816,7 @@ private fun SetupScreenBackground(
 private fun SetupStepHeader(currentStep: Int) {
   Surface(
     shape = RoundedCornerShape(999.dp),
-    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f),
+    color = setupPanelColor(0.64f),
     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.16f)),
   ) {
     Row(
@@ -836,18 +874,18 @@ private fun SetupHeroCard(
   Surface(
     modifier = modifier.fillMaxWidth(),
     shape = RoundedCornerShape(30.dp),
-    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f),
+    color = setupPanelColor(0.82f),
     border = BorderStroke(1.dp, accent.copy(alpha = 0.30f)),
-    shadowElevation = 2.dp,
+    shadowElevation = if (setupIsLightTheme()) 0.dp else 2.dp,
   ) {
     Box(
       modifier = Modifier
         .background(
           Brush.linearGradient(
             listOf(
-              accent.copy(alpha = 0.18f),
-              MaterialTheme.colorScheme.surface.copy(alpha = 0.10f),
-              MaterialTheme.colorScheme.secondary.copy(alpha = 0.08f),
+              setupPanelAccentWash(accent, 0.18f),
+              MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = if (setupIsLightTheme()) 0.34f else 0.10f),
+              setupPanelAccentWash(MaterialTheme.colorScheme.secondary, 0.08f),
             ),
           ),
         )
@@ -922,7 +960,7 @@ private fun SetupInfoCard(
   Surface(
     modifier = modifier.fillMaxWidth(),
     shape = RoundedCornerShape(24.dp),
-    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.36f),
+    color = setupPanelColor(0.78f),
     border = BorderStroke(1.dp, accent.copy(alpha = 0.24f)),
   ) {
     Row(
@@ -930,8 +968,8 @@ private fun SetupInfoCard(
         .background(
           Brush.linearGradient(
             listOf(
-              accent.copy(alpha = 0.10f),
-              MaterialTheme.colorScheme.surface.copy(alpha = 0.04f),
+              setupPanelAccentWash(accent, 0.10f),
+              MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = if (setupIsLightTheme()) 0.22f else 0.04f),
             ),
           ),
         )
@@ -978,7 +1016,7 @@ private fun SetupProgressCard(text: String) {
   Surface(
     modifier = Modifier.fillMaxWidth(),
     shape = RoundedCornerShape(24.dp),
-    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f),
+    color = setupPanelColor(0.80f),
     border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.24f)),
   ) {
     Row(
@@ -1127,7 +1165,7 @@ private fun OptionalZygiskInstallCard(
   val compactLayout = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp < 420
   Card(
     modifier = Modifier.fillMaxWidth(),
-    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+    colors = CardDefaults.cardColors(containerColor = setupPanelColor(0.92f)),
   ) {
     Column(
       modifier = Modifier
@@ -1202,7 +1240,7 @@ private fun InstallConflictCard(
   val compactLayout = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp < 420
   Card(
     modifier = Modifier.fillMaxWidth(),
-    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+    colors = CardDefaults.cardColors(containerColor = setupPanelColor(0.92f)),
   ) {
     Column(
       modifier = Modifier
