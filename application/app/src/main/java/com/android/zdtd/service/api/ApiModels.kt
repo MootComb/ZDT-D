@@ -63,6 +63,121 @@ object ApiModels {
     val profiles: List<Profile> = emptyList(),
   )
 
+  data class TrafficReport(
+    val ok: Boolean = true,
+    val busy: Boolean = false,
+    val preparing: Boolean = false,
+    val message: String = "",
+    val error: String = "",
+    val updatedAtUnix: Long = 0L,
+    val source: String = "",
+    val rules: List<TrafficRuleCounter> = emptyList(),
+    val chains: List<TrafficChainSummary> = emptyList(),
+    val vpn: List<VpnTraffic> = emptyList(),
+    val interfaces: List<InterfaceTraffic> = emptyList(),
+    val warnings: List<String> = emptyList(),
+    val proxyEndpoints: List<TrafficBackendPort> = emptyList(),
+    val t2sInstances: List<TrafficT2sInstance> = emptyList(),
+  )
+
+  data class TrafficRuleCounter(
+    val family: String = "",
+    val table: String = "",
+    val chain: String = "",
+    val semantic: String = "",
+    val target: String = "",
+    val programId: String? = null,
+    val profile: String? = null,
+    val slot: String? = null,
+    val uidFile: String? = null,
+    val uid: Int? = null,
+    val packageName: String? = null,
+    val packages: List<String> = emptyList(),
+    val proto: String? = null,
+    val destPorts: List<String> = emptyList(),
+    val redirectPort: Int? = null,
+    val queue: Int? = null,
+    val backendPorts: List<TrafficBackendPort> = emptyList(),
+    val packets: Long = 0L,
+    val bytes: Long = 0L,
+    val active: Boolean = false,
+    val actionCounter: Boolean = false,
+    val raw: String = "",
+  )
+
+  data class TrafficBackendPort(
+    val port: Int = 0,
+    val label: String = "",
+    val host: String? = null,
+    val programId: String? = null,
+    val profile: String? = null,
+    val server: String? = null,
+    val wrappedHost: String? = null,
+    val wrappedPort: Int? = null,
+    val wrappedLabel: String? = null,
+    val wrappedProgramId: String? = null,
+    val wrappedProfile: String? = null,
+    val wrappedServer: String? = null,
+  )
+
+  data class TrafficT2sInstance(
+    val instanceId: String = "",
+    val program: String = "",
+    val profile: String = "",
+    val scope: String = "",
+    val pid: Int = 0,
+    val webAddr: String = "127.0.0.1",
+    val webPort: Int = 0,
+    val listenAddr: String = "127.0.0.1",
+    val listenPort: Int = 0,
+    val backendMode: String = "",
+    val prioritySpeedAware: Boolean = false,
+    val updatedAt: Long = 0L,
+  )
+
+  data class TrafficChainSummary(
+    val family: String = "",
+    val table: String = "",
+    val chain: String = "",
+    val kind: String = "",
+    val ruleCount: Long = 0L,
+    val actionPackets: Long = 0L,
+    val actionBytes: Long = 0L,
+    val returnPackets: Long = 0L,
+    val returnBytes: Long = 0L,
+    val passPackets: Long = 0L,
+    val passBytes: Long = 0L,
+  )
+
+  data class InterfaceTraffic(
+    val iface: String = "",
+    val rxBytes: Long = 0L,
+    val rxPackets: Long = 0L,
+    val txBytes: Long = 0L,
+    val txPackets: Long = 0L,
+    val totalBytes: Long = 0L,
+  )
+
+  data class VpnTraffic(
+    val ownerProgram: String = "",
+    val profile: String = "",
+    val netid: Int = 0,
+    val tun: String = "",
+    val rxBytes: Long = 0L,
+    val rxPackets: Long = 0L,
+    val txBytes: Long = 0L,
+    val txPackets: Long = 0L,
+    val totalBytes: Long = 0L,
+    val uidRanges: List<String> = emptyList(),
+    val apps: List<VpnApp> = emptyList(),
+  )
+
+  data class VpnApp(
+    val uid: Int = 0,
+    val packageName: String? = null,
+    val packages: List<String> = emptyList(),
+  )
+
   /** Prebuilt strategy variant metadata (optional sha256 for quick matching). */
   data class StrategyVariant(
     val name: String,
@@ -126,6 +241,23 @@ object ApiModels {
     val active: Boolean = false,
   )
 
+  data class HidingLayerStatus(
+    val status: String = "unknown",
+    val active: Boolean = false,
+    val installed: Boolean = false,
+    val requested: Boolean = false,
+    val enabled: Boolean = false,
+    val selectedApps: Int = 0,
+    val lastSeenMs: Long = 0L,
+  )
+
+  data class HidingStatus(
+    val selectedApps: Int = 0,
+    val zygisk: HidingLayerStatus = HidingLayerStatus(),
+    val lsposed: HidingLayerStatus = HidingLayerStatus(),
+    val proxyInfo: HidingLayerStatus = HidingLayerStatus(),
+  )
+
   data class AppAssignmentEntry(
     val programId: String,
     val profile: String? = null,
@@ -137,6 +269,27 @@ object ApiModels {
   data class AppAssignmentsState(
     val lists: List<AppAssignmentEntry> = emptyList(),
     val proxyInfoPackages: Set<String> = emptySet(),
+  )
+
+  data class ConstructionProxyEndpointCandidate(
+    val key: String = "",
+    val programId: String = "",
+    val profile: String? = null,
+    val server: String? = null,
+    val slot: String = "common",
+    val host: String = "127.0.0.1",
+    val port: Int = 0,
+    val label: String = "",
+    val kind: String = "socks5",
+    val enabled: Boolean = false,
+    val running: Boolean = false,
+    val appListPath: String? = null,
+  )
+
+  data class ConstructionReleaseEndpointResult(
+    val ok: Boolean = false,
+    val stopped: Boolean = false,
+    val error: String = "",
   )
 
 
@@ -152,6 +305,16 @@ object ApiModels {
       }
       else -> default
     }
+  }
+
+  private fun jsonStringList(obj: JSONObject?, key: String): List<String> {
+    val arr = obj?.optJSONArray(key) ?: return emptyList()
+    val out = ArrayList<String>(arr.length())
+    for (i in 0 until arr.length()) {
+      val value = arr.optString(i, "").trim()
+      if (value.isNotEmpty()) out += value
+    }
+    return out
   }
 
 
@@ -472,6 +635,29 @@ object ApiModels {
     return out
   }
 
+
+  fun parseHidingStatus(wrapper: JSONObject?): HidingStatus {
+    if (wrapper == null) return HidingStatus()
+    fun layer(o: JSONObject?): HidingLayerStatus {
+      if (o == null) return HidingLayerStatus()
+      return HidingLayerStatus(
+        status = o.optString("status", "unknown"),
+        active = jsonBool(o, "active", false),
+        installed = jsonBool(o, "installed", false),
+        requested = jsonBool(o, "requested", false),
+        enabled = jsonBool(o, "enabled", false),
+        selectedApps = o.optInt("selected_apps", 0),
+        lastSeenMs = o.optLong("last_seen_ms", 0L),
+      )
+    }
+    return HidingStatus(
+      selectedApps = wrapper.optInt("selected_apps", 0),
+      zygisk = layer(wrapper.optJSONObject("zygisk")),
+      lsposed = layer(wrapper.optJSONObject("lsposed")),
+      proxyInfo = layer(wrapper.optJSONObject("proxyinfo")),
+    )
+  }
+
   fun parseProxyInfo(wrapper: JSONObject?): ProxyInfoState {
     if (wrapper == null) return ProxyInfoState()
     return ProxyInfoState(
@@ -523,6 +709,213 @@ object ApiModels {
     }
     return AppAssignmentsState(lists = lists, proxyInfoPackages = proxyPkgs)
   }
+
+  fun parseTrafficReport(wrapper: JSONObject?): TrafficReport {
+    if (wrapper == null) return TrafficReport(ok = false, error = "empty response")
+    val wrapperOk = wrapper.optBoolean("ok", true)
+    val wrapperBusy = jsonBool(wrapper, "busy", false)
+    val wrapperPreparing = jsonBool(wrapper, "preparing", false)
+    val wrapperMessage = wrapper.optString("message", "")
+    val wrapperError = wrapper.optString("error", "")
+    if (wrapperBusy || wrapperPreparing) {
+      return TrafficReport(ok = wrapperOk, busy = true, preparing = true, message = wrapperMessage.ifBlank { "Traffic snapshot is still preparing. Please wait." }, error = wrapperError)
+    }
+    val data = wrapper.optJSONObject("traffic") ?: wrapper
+
+    val rulesArr = data.optJSONArray("rules") ?: JSONArray()
+    val rules = ArrayList<TrafficRuleCounter>(rulesArr.length())
+    for (i in 0 until rulesArr.length()) {
+      val o = rulesArr.optJSONObject(i) ?: continue
+      rules += TrafficRuleCounter(
+        family = o.optString("family", ""),
+        table = o.optString("table", ""),
+        chain = o.optString("chain", ""),
+        semantic = o.optString("semantic", ""),
+        target = o.optString("target", ""),
+        programId = o.optString("program_id", "").trim().takeIf { it.isNotEmpty() },
+        profile = o.optString("profile", "").trim().takeIf { it.isNotEmpty() },
+        slot = o.optString("slot", "").trim().takeIf { it.isNotEmpty() },
+        uidFile = o.optString("uid_file", "").trim().takeIf { it.isNotEmpty() },
+        uid = if (o.has("uid") && !o.isNull("uid")) o.optInt("uid") else null,
+        packageName = o.optString("package", "").trim().takeIf { it.isNotEmpty() },
+        packages = jsonStringList(o, "packages"),
+        proto = o.optString("proto", "").trim().takeIf { it.isNotEmpty() },
+        destPorts = jsonStringList(o, "dest_ports"),
+        redirectPort = if (o.has("redirect_port") && !o.isNull("redirect_port")) o.optInt("redirect_port") else null,
+        queue = if (o.has("queue") && !o.isNull("queue")) o.optInt("queue") else null,
+        backendPorts = parseTrafficBackendPorts(o.optJSONArray("backend_ports")),
+        packets = o.optLong("packets", 0L),
+        bytes = o.optLong("bytes", 0L),
+        active = o.optBoolean("active", false),
+        actionCounter = o.optBoolean("action_counter", false),
+        raw = o.optString("raw_rule", o.optString("raw", "")),
+      )
+    }
+
+    val chainsArr = data.optJSONArray("chains") ?: JSONArray()
+    val chains = ArrayList<TrafficChainSummary>(chainsArr.length())
+    for (i in 0 until chainsArr.length()) {
+      val o = chainsArr.optJSONObject(i) ?: continue
+      chains += TrafficChainSummary(
+        family = o.optString("family", ""),
+        table = o.optString("table", ""),
+        chain = o.optString("chain", ""),
+        kind = o.optString("kind", ""),
+        ruleCount = o.optLong("rule_count", 0L),
+        actionPackets = o.optLong("action_packets", 0L),
+        actionBytes = o.optLong("action_bytes", 0L),
+        returnPackets = o.optLong("return_packets", 0L),
+        returnBytes = o.optLong("return_bytes", 0L),
+        passPackets = o.optLong("pass_packets", 0L),
+        passBytes = o.optLong("pass_bytes", 0L),
+      )
+    }
+
+    val ifacesArr = data.optJSONArray("interfaces") ?: JSONArray()
+    val interfaces = ArrayList<InterfaceTraffic>(ifacesArr.length())
+    for (i in 0 until ifacesArr.length()) {
+      val o = ifacesArr.optJSONObject(i) ?: continue
+      interfaces += InterfaceTraffic(
+        iface = o.optString("iface", ""),
+        rxBytes = o.optLong("rx_bytes", 0L),
+        rxPackets = o.optLong("rx_packets", 0L),
+        txBytes = o.optLong("tx_bytes", 0L),
+        txPackets = o.optLong("tx_packets", 0L),
+        totalBytes = o.optLong("total_bytes", 0L),
+      )
+    }
+
+    val vpnArr = data.optJSONArray("vpn") ?: JSONArray()
+    val vpn = ArrayList<VpnTraffic>(vpnArr.length())
+    for (i in 0 until vpnArr.length()) {
+      val o = vpnArr.optJSONObject(i) ?: continue
+      val appsArr = o.optJSONArray("apps") ?: JSONArray()
+      val apps = ArrayList<VpnApp>(appsArr.length())
+      for (j in 0 until appsArr.length()) {
+        val app = appsArr.optJSONObject(j) ?: continue
+        apps += VpnApp(
+          uid = app.optInt("uid", 0),
+          packageName = app.optString("package", "").trim().takeIf { it.isNotEmpty() },
+          packages = jsonStringList(app, "packages"),
+        )
+      }
+      vpn += VpnTraffic(
+        ownerProgram = o.optString("owner_program", ""),
+        profile = o.optString("profile", ""),
+        netid = o.optInt("netid", 0),
+        tun = o.optString("tun", ""),
+        rxBytes = o.optLong("rx_bytes", 0L),
+        rxPackets = o.optLong("rx_packets", 0L),
+        txBytes = o.optLong("tx_bytes", 0L),
+        txPackets = o.optLong("tx_packets", 0L),
+        totalBytes = o.optLong("total_bytes", 0L),
+        uidRanges = jsonStringList(o, "uid_ranges"),
+        apps = apps,
+      )
+    }
+
+    return TrafficReport(
+      ok = wrapperOk,
+      busy = wrapperBusy,
+      preparing = wrapperPreparing,
+      message = wrapperMessage,
+      error = wrapperError,
+      updatedAtUnix = data.optLong("updated_at_unix", 0L),
+      source = data.optString("source", ""),
+      rules = rules,
+      chains = chains,
+      vpn = vpn,
+      interfaces = interfaces,
+      warnings = jsonStringList(data, "warnings"),
+      proxyEndpoints = parseTrafficBackendPorts(data.optJSONArray("proxy_endpoints")),
+      t2sInstances = parseTrafficT2sInstances(data.optJSONArray("t2s_instances")),
+    )
+  }
+
+
+  private fun parseTrafficT2sInstances(arr: JSONArray?): List<TrafficT2sInstance> {
+    if (arr == null) return emptyList()
+    val out = ArrayList<TrafficT2sInstance>(arr.length())
+    for (i in 0 until arr.length()) {
+      val o = arr.optJSONObject(i) ?: continue
+      out += TrafficT2sInstance(
+        instanceId = o.optString("instance_id", ""),
+        program = o.optString("program", ""),
+        profile = o.optString("profile", ""),
+        scope = o.optString("scope", ""),
+        pid = o.optInt("pid", 0),
+        webAddr = o.optString("web_addr", "127.0.0.1"),
+        webPort = o.optInt("web_port", 0),
+        listenAddr = o.optString("listen_addr", "127.0.0.1"),
+        listenPort = o.optInt("listen_port", 0),
+        backendMode = o.optString("backend_mode", ""),
+        prioritySpeedAware = o.optBoolean("priority_speed_aware", false),
+        updatedAt = o.optLong("updated_at", 0L),
+      )
+    }
+    return out.filter { it.webPort > 0 && it.listenPort > 0 }
+  }
+
+
+  private fun parseTrafficBackendPorts(arr: JSONArray?): List<TrafficBackendPort> {
+    if (arr == null) return emptyList()
+    val out = ArrayList<TrafficBackendPort>(arr.length())
+    for (i in 0 until arr.length()) {
+      val o = arr.optJSONObject(i) ?: continue
+      out += TrafficBackendPort(
+        port = o.optInt("port", 0),
+        label = o.optString("label", ""),
+        host = o.optString("host", "").trim().takeIf { it.isNotEmpty() },
+        programId = o.optString("program_id", "").trim().takeIf { it.isNotEmpty() },
+        profile = o.optString("profile", "").trim().takeIf { it.isNotEmpty() },
+        server = o.optString("server", "").trim().takeIf { it.isNotEmpty() },
+        wrappedHost = o.optString("wrapped_host", "").trim().takeIf { it.isNotEmpty() },
+        wrappedPort = if (o.has("wrapped_port") && !o.isNull("wrapped_port")) o.optInt("wrapped_port").takeIf { it > 0 } else null,
+        wrappedLabel = o.optString("wrapped_label", "").trim().takeIf { it.isNotEmpty() },
+        wrappedProgramId = o.optString("wrapped_program_id", "").trim().takeIf { it.isNotEmpty() },
+        wrappedProfile = o.optString("wrapped_profile", "").trim().takeIf { it.isNotEmpty() },
+        wrappedServer = o.optString("wrapped_server", "").trim().takeIf { it.isNotEmpty() },
+      )
+    }
+    return out
+  }
+
+  fun parseConstructionProxyEndpoints(wrapper: JSONObject?): List<ConstructionProxyEndpointCandidate> {
+    if (wrapper == null || !wrapper.optBoolean("ok", false)) return emptyList()
+    val arr = wrapper.optJSONArray("candidates") ?: return emptyList()
+    val out = ArrayList<ConstructionProxyEndpointCandidate>(arr.length())
+    for (i in 0 until arr.length()) {
+      val o = arr.optJSONObject(i) ?: continue
+      val port = o.optInt("port", 0)
+      val programId = o.optString("program_id", "").trim()
+      if (port <= 0 || programId.isEmpty()) continue
+      out += ConstructionProxyEndpointCandidate(
+        key = o.optString("key", ""),
+        programId = programId,
+        profile = o.optString("profile", "").trim().takeIf { it.isNotEmpty() },
+        server = o.optString("server", "").trim().takeIf { it.isNotEmpty() },
+        slot = o.optString("slot", "common").ifBlank { "common" },
+        host = o.optString("host", "127.0.0.1").ifBlank { "127.0.0.1" },
+        port = port,
+        label = o.optString("label", ""),
+        kind = o.optString("kind", "socks5").ifBlank { "socks5" },
+        enabled = jsonBool(o, "enabled", false),
+        running = jsonBool(o, "running", false),
+        appListPath = o.optString("app_list_path", "").trim().takeIf { it.isNotEmpty() },
+      )
+    }
+    return out
+  }
+
+  fun parseConstructionReleaseEndpointResult(wrapper: JSONObject?): ConstructionReleaseEndpointResult {
+    if (wrapper == null) return ConstructionReleaseEndpointResult(error = "empty response")
+    return ConstructionReleaseEndpointResult(
+      ok = jsonBool(wrapper, "ok", false),
+      stopped = jsonBool(wrapper, "stopped", false),
+      error = wrapper.optString("error", ""),
+    )
+  }
+
   fun parsePrograms(wrapper: JSONObject?): List<Program> {
     if (wrapper == null) return emptyList()
     if (!wrapper.optBoolean("ok", false)) return emptyList()

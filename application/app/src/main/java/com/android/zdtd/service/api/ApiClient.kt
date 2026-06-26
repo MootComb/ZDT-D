@@ -57,6 +57,11 @@ class ApiClient(
     return ApiModels.parsePrograms(obj)
   }
 
+  fun getTrafficRules(): ApiModels.TrafficReport {
+    val obj = requestJson("GET", "/api/traffic/rules", null)
+    return ApiModels.parseTrafficReport(obj)
+  }
+
   fun setProgramEnabled(programId: String, enabled: Boolean): Boolean {
     val path = "/api/programs/${enc(programId)}/enabled"
     val body = JSONObject().put("enabled", enabled)
@@ -249,9 +254,30 @@ class ApiClient(
     val obj = requestJson("GET", "/api/apps/assignments", null)
     return ApiModels.parseAppAssignments(obj)
   }
+  fun getConstructionProxyEndpoints(): List<ApiModels.ConstructionProxyEndpointCandidate> {
+    val obj = requestJson("GET", "/api/construction/proxy-endpoints", null)
+    return ApiModels.parseConstructionProxyEndpoints(obj)
+  }
+
+  fun releaseConstructionProxyEndpoint(candidate: ApiModels.ConstructionProxyEndpointCandidate): ApiModels.ConstructionReleaseEndpointResult {
+    val body = JSONObject()
+      .put("program_id", candidate.programId)
+      .put("slot", candidate.slot.ifBlank { "common" })
+      .put("port", candidate.port)
+    candidate.profile?.takeIf { it.isNotBlank() }?.let { body.put("profile", it) }
+    candidate.server?.takeIf { it.isNotBlank() }?.let { body.put("server", it) }
+    val obj = requestJson("POST", "/api/construction/proxy-endpoints/release", body)
+    return ApiModels.parseConstructionReleaseEndpointResult(obj)
+  }
+
   fun getProxyInfo(): ApiModels.ProxyInfoState {
     val obj = requestJson("GET", "/api/proxyinfo", null)
     return ApiModels.parseProxyInfo(obj)
+  }
+
+  fun getHidingStatus(): ApiModels.HidingStatus {
+    val obj = requestJson("GET", "/api/hiding/status", null)
+    return ApiModels.parseHidingStatus(obj)
   }
 
   fun setProxyInfoEnabled(enabled: Boolean): Boolean {

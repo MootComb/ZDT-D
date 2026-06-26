@@ -60,6 +60,11 @@ import kotlin.random.Random
 private const val ZIP_GENERAL_PURPOSE_ENCRYPTED_FLAG = 0x0001
 private const val ZIP_EOCD_MIN_SIZE = 22
 private const val ZIP_EOCD_MAX_SEARCH = 65557
+private const val LSPOSED_HIDE_PREFS_NAME = "zdtd_hide_targets"
+private const val LSPOSED_HIDE_PREF_ENABLED = "enabled"
+private const val LSPOSED_HIDE_PREF_PACKAGES = "packages"
+private const val LSPOSED_HIDE_PREF_UIDS = "uids"
+private const val LSPOSED_HIDE_PREF_UPDATED_AT = "updated_at"
 
 enum class RootState {
   CHECKING,
@@ -212,6 +217,11 @@ data class BackupUiState(
   // Version mismatch: allow user to force restore (advanced).
   val forceRestoreAvailable: Boolean = false,
   val forceRestoreName: String? = null,
+
+  // Backup file opened externally by Android file manager (.zdtb ACTION_VIEW).
+  val externalRestorePromptVisible: Boolean = false,
+  val externalRestoreName: String? = null,
+  val externalRestoreDisplayName: String = "",
 )
 
 
@@ -312,6 +322,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app), ZdtdActions {
 
   private val _backupEvents = MutableSharedFlow<BackupEvent>(extraBufferCapacity = 8)
   val backupEvents: SharedFlow<BackupEvent> = _backupEvents.asSharedFlow()
+  private var externalBackupOpenJob: Job? = null
 
   // ----- Program updates (zapret / zapret2 / mihomo / mieru / opera-proxy) -----
   private val _programUpdates = MutableStateFlow(ProgramUpdatesUiState())
@@ -2021,6 +2032,117 @@ fi""".trimIndent()
 
       finishBackupProgress(text = str(R.string.mv_backup_import_done, name), percent = 100)
       refreshBackups()
+    }
+  }
+
+  override fun onExternalBackupOpen(uri: Uri) {
+    externalBackupOpenJob?.cancel()
+    externalBackupOpenJob = launchIO {
+      // ACTION_VIEW can arrive before the cold-start root check finishes.
+      val waitStartedAt = System.currentTimeMillis()
+      while (_rootState.value != RootState.GRANTED && System.currentTimeMillis() - waitStartedAt < 15_000L) {
+        currentCoroutineContext().ensureActive()
+        delay(250L)
+      }
+      if (_rootState.value != RootState.GRANTED) {
+        toast(str(R.string.mv_auto_029))
+        return@launchIO
+      }
+      if (_backup.value.progressVisible && !_backup.value.progressFinished) return@launchIO
+
+      showBackupProgress(
+        title = str(R.string.backup_external_restore_checking),
+        text = str(R.string.mv_auto_032),
+        percent = 5,
+      )
+
+      val tmp = File(ctx.cacheDir, "zdtb_external_${System.currentTimeMillis()}.zdtb")
+      val okCopy = runCatching {
+        ctx.contentResolver.openInputStream(uri)?.use { input ->
+          FileOutputStream(tmp).use { output -> input.copyTo(output) }
+        } ?: return@runCatching false
+        true
+      }.getOrDefault(false)
+
+      if (!okCopy || !tmp.exists()) {
+        runCatching { tmp.delete() }
+        _backup.update { it.copy(progressVisible = false, progressFinished = false, progressError = null) }
+        toast(str(R.string.mv_auto_033))
+        return@launchIO
+      }
+
+      _backup.update { st -> st.copy(progressText = str(R.string.mv_auto_034), progressPercent = 25) }
+      // Validate the archive structure here, but let restoreBackup() do the strict versionCode
+      // decision so the existing "Restore anyway" path still works for external files.
+      val validation = validateBackupFile(tmp.absolutePath, ignoreVersionCode = true)
+      if (!validation.ok) {
+        runCatching { tmp.delete() }
+        _backup.update { it.copy(progressVisible = false, progressFinished = false, progressError = null) }
+        toast(validation.error ?: str(R.string.backup_external_restore_invalid))
+        return@launchIO
+      }
+
+      root.execRootSh("mkdir -p ${shQuote(backupDirPath)} 2>/dev/null || true")
+      val tsForFile = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
+      val importedName = "ZDT-D_backup_${tsForFile}_external.zdtb"
+      val dest = "${backupDirPath}/${importedName}"
+      _backup.update { st -> st.copy(progressText = str(R.string.mv_auto_036), progressPercent = 70) }
+      val r = root.execRootSh("cp -f ${shQuote(tmp.absolutePath)} ${shQuote(dest)} 2>/dev/null || cat ${shQuote(tmp.absolutePath)} > ${shQuote(dest)}; chmod 0644 ${shQuote(dest)} 2>/dev/null || true")
+      runCatching { tmp.delete() }
+      if (!r.isSuccess) {
+        val err = (r.out + r.err).joinToString("\n").trim()
+        val detail = if (err.isBlank()) "copy failed" else err
+        _backup.update { it.copy(progressVisible = false, progressFinished = false, progressError = null) }
+        toast(str(R.string.mv_backup_import_save_failed, detail))
+        return@launchIO
+      }
+
+      val displayName = uri.lastPathSegment
+        ?.substringAfterLast('/')
+        ?.substringAfterLast(':')
+        ?.takeIf { it.isNotBlank() }
+        ?: importedName
+
+      _backup.update { st ->
+        st.copy(
+          progressVisible = false,
+          progressFinished = false,
+          progressError = null,
+          externalRestorePromptVisible = true,
+          externalRestoreName = importedName,
+          externalRestoreDisplayName = displayName,
+        )
+      }
+      refreshBackups()
+    }
+  }
+
+  override fun confirmExternalBackupRestore() {
+    val name = _backup.value.externalRestoreName ?: return
+    _backup.update { st ->
+      st.copy(
+        externalRestorePromptVisible = false,
+        externalRestoreName = null,
+        externalRestoreDisplayName = "",
+      )
+    }
+    restoreBackup(name, ignoreVersionCode = false)
+  }
+
+  override fun dismissExternalBackupRestore() {
+    val name = _backup.value.externalRestoreName
+    _backup.update { st ->
+      st.copy(
+        externalRestorePromptVisible = false,
+        externalRestoreName = null,
+        externalRestoreDisplayName = "",
+      )
+    }
+    if (!name.isNullOrBlank()) {
+      launchIO {
+        root.execRootSh("rm -f ${shQuote(backupDirPath + "/" + name)} 2>/dev/null || true")
+        refreshBackups()
+      }
     }
   }
 
@@ -5267,6 +5389,34 @@ private fun shQuote(s: String): String {
     }
   }
 
+  override fun loadTrafficRules(onDone: (ApiModels.TrafficReport?) -> Unit) {
+    launchIO {
+      val report = runCatching { api.getTrafficRules() }.getOrNull()
+      if (report == null) log("ERR", "/api/traffic/rules: load failed")
+      withContext(Dispatchers.Main.immediate) { onDone(report) }
+    }
+  }
+
+  override fun loadConstructionProxyEndpoints(onDone: (List<ApiModels.ConstructionProxyEndpointCandidate>?) -> Unit) {
+    launchIO {
+      val endpoints = runCatching { api.getConstructionProxyEndpoints() }.getOrNull()
+      if (endpoints == null) log("ERR", "/api/construction/proxy-endpoints: load failed")
+      withContext(Dispatchers.Main.immediate) { onDone(endpoints) }
+    }
+  }
+
+  override fun releaseConstructionProxyEndpoint(candidate: ApiModels.ConstructionProxyEndpointCandidate, onDone: (ApiModels.ConstructionReleaseEndpointResult?) -> Unit) {
+    launchIO {
+      val result = runCatching { api.releaseConstructionProxyEndpoint(candidate) }.getOrNull()
+      if (result?.ok == true) {
+        log("OK", "construction endpoint ${candidate.label.ifBlank { candidate.programId }} ${if (result.stopped) "stopped" else "released"}")
+      } else {
+        log("ERR", "construction endpoint ${candidate.label.ifBlank { candidate.programId }} release failed")
+      }
+      withContext(Dispatchers.Main.immediate) { onDone(result) }
+    }
+  }
+
   override fun saveJsonData(path: String, obj: JSONObject, onDone: (Boolean) -> Unit) {
     launchIO {
       val ok = runCatching { api.putJsonData(path, obj) }.getOrDefault(false)
@@ -5570,12 +5720,51 @@ override fun applyStrategicVariant(programId: String, profile: String, file: Str
     }
   }
 
+  @Suppress("DEPRECATION")
+  private fun syncLsposedHidePreferences(enabled: Boolean, content: String) {
+    val packages = content
+      .lineSequence()
+      .map { it.substringBefore('#').trim() }
+      .filter { it.isNotEmpty() && it != BuildConfig.APPLICATION_ID }
+      .distinct()
+      .toList()
+    val app = getApplication<Application>()
+    val pm = app.packageManager
+    val uids = packages.mapNotNull { pkg ->
+      runCatching {
+        if (Build.VERSION.SDK_INT >= 33) {
+          pm.getApplicationInfo(pkg, PackageManager.ApplicationInfoFlags.of(0)).uid
+        } else {
+          pm.getApplicationInfo(pkg, 0).uid
+        }
+      }.getOrNull()
+    }.map { it.toString() }.toSet()
+
+    val prefs = runCatching {
+      app.getSharedPreferences(LSPOSED_HIDE_PREFS_NAME, Context.MODE_WORLD_READABLE)
+    }.getOrElse { err ->
+      log("WARN", "LSPosed hide prefs world-readable open failed: ${err.message ?: err}")
+      app.getSharedPreferences(LSPOSED_HIDE_PREFS_NAME, Context.MODE_PRIVATE)
+    }
+    prefs.edit()
+      .putBoolean(LSPOSED_HIDE_PREF_ENABLED, enabled)
+      .putStringSet(LSPOSED_HIDE_PREF_PACKAGES, packages.toSet())
+      .putStringSet(LSPOSED_HIDE_PREF_UIDS, uids)
+      .putLong(LSPOSED_HIDE_PREF_UPDATED_AT, System.currentTimeMillis())
+      .apply()
+    log("OK", "LSPosed hide prefs synced: enabled=$enabled packages=${packages.size} uids=${uids.size}")
+  }
+
   private suspend fun fetchProxyInfoState(): ApiModels.ProxyInfoState {
     val base = runCatching { api.getProxyInfo() }.getOrDefault(ApiModels.ProxyInfoState())
     val apps = base.appsContent.ifBlank {
       runCatching { api.getProxyInfoApps() }.getOrDefault("")
     }
     return base.copy(appsContent = apps)
+  }
+
+  private suspend fun fetchHidingStatus(): ApiModels.HidingStatus {
+    return runCatching { api.getHidingStatus() }.getOrDefault(ApiModels.HidingStatus())
   }
 
   private suspend fun fetchBlockedQuicState(): ApiModels.ProxyInfoState {
@@ -5597,13 +5786,16 @@ override fun applyStrategicVariant(programId: String, profile: String, file: Str
           active = false,
         )
       }
+      val hiding = fetchHidingStatus()
       _appUpdate.update {
         it.copy(
           proxyInfoEnabled = state.enabled,
           proxyInfoAppsContent = state.appsContent,
           proxyInfoBusy = false,
+          hidingStatus = hiding,
         )
       }
+      syncLsposedHidePreferences(state.enabled, state.appsContent)
     }
   }
 
@@ -5657,6 +5849,9 @@ override fun applyStrategicVariant(programId: String, profile: String, file: Str
         }
         return@launchIO
       }
+      val hiding = fetchHidingStatus()
+      _appUpdate.update { it.copy(hidingStatus = hiding) }
+      syncLsposedHidePreferences(enabled, _appUpdate.value.proxyInfoAppsContent)
       withContext(Dispatchers.Main.immediate) {
         toast(str(R.string.settings_proxyinfo_saved))
       }
@@ -5687,7 +5882,9 @@ override fun applyStrategicVariant(programId: String, profile: String, file: Str
         }
         return@launchIO
       }
-      _appUpdate.update { it.copy(proxyInfoAppsContent = normalized, proxyInfoBusy = false) }
+      val hiding = fetchHidingStatus()
+      _appUpdate.update { it.copy(proxyInfoAppsContent = normalized, proxyInfoBusy = false, hidingStatus = hiding) }
+      syncLsposedHidePreferences(_appUpdate.value.proxyInfoEnabled, normalized)
       scheduleProxyInfoApply("apps-save")
       withContext(Dispatchers.Main.immediate) {
         toast(str(R.string.settings_proxyinfo_saved))
@@ -5721,7 +5918,9 @@ override fun applyStrategicVariant(programId: String, profile: String, file: Str
         }
         return@launchIO
       }
-      _appUpdate.update { it.copy(proxyInfoAppsContent = normalized, proxyInfoBusy = false) }
+      val hiding = fetchHidingStatus()
+      _appUpdate.update { it.copy(proxyInfoAppsContent = normalized, proxyInfoBusy = false, hidingStatus = hiding) }
+      syncLsposedHidePreferences(_appUpdate.value.proxyInfoEnabled, normalized)
       scheduleProxyInfoApply("apps-save-resolved")
       withContext(Dispatchers.Main.immediate) {
         toast(str(R.string.settings_proxyinfo_saved))
