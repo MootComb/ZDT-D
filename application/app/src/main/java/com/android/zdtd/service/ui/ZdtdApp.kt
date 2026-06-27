@@ -712,6 +712,7 @@ private fun UpdatePromptDialog(setup: SetupUiState, onUpdate: () -> Unit, onSkip
 private fun parentAppsRoute(route: AppsRoute): AppsRoute = when (route) {
   AppsRoute.List -> AppsRoute.List
   AppsRoute.AnalysisTools -> AppsRoute.List
+  AppsRoute.ConstructionStudio -> AppsRoute.AnalysisTools
   AppsRoute.DpiDetector -> AppsRoute.AnalysisTools
   AppsRoute.NfqwsTester -> AppsRoute.AnalysisTools
   is AppsRoute.Program -> AppsRoute.List
@@ -808,9 +809,36 @@ private fun MainShell(
 
   val snackHost = remember { SnackbarHostState() }
   val uiState by uiStateFlow.collectAsStateWithLifecycle()
+  val backup by backupFlow.collectAsStateWithLifecycle()
   val landscapeControl = rememberUseLandscapeControlLayout()
 
   DaemonUnavailableDialogHost(uiState = uiState)
+
+  if (backup.externalRestorePromptVisible) {
+    AlertDialog(
+      onDismissRequest = actions::dismissExternalBackupRestore,
+      title = { Text(stringResource(R.string.backup_external_restore_title)) },
+      text = {
+        val fileName = backup.externalRestoreDisplayName.ifBlank {
+          backup.externalRestoreName ?: stringResource(R.string.backup_external_restore_default_file)
+        }
+        Text(stringResource(R.string.backup_external_restore_text, fileName))
+      },
+      dismissButton = {
+        TextButton(onClick = actions::dismissExternalBackupRestore) {
+          Text(stringResource(R.string.backup_cancel))
+        }
+      },
+      confirmButton = {
+        TextButton(onClick = {
+          showBackup = true
+          actions.confirmExternalBackupRestore()
+        }) {
+          Text(stringResource(R.string.backup_external_restore_apply))
+        }
+      },
+    )
+  }
 
   if (showWorldMapPrompt) {
     AlertDialog(
@@ -878,7 +906,6 @@ private fun MainShell(
   }
 
   if (showBackup) {
-    val backup by backupFlow.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) {
       actions.refreshBackups()
     }
@@ -1021,6 +1048,7 @@ private fun MainShell(
                 proxyInfoEnabled = appUpdate.proxyInfoEnabled,
                 proxyInfoBusy = appUpdate.proxyInfoBusy,
                 proxyInfoAppsContent = appUpdate.proxyInfoAppsContent,
+                hidingStatus = appUpdate.hidingStatus,
                 onProxyInfoEnabledChange = actions::setProxyInfoEnabled,
                 onLoadAppAssignments = actions::loadAppAssignments,
                 onProxyInfoAppsSave = actions::saveProxyInfoApps,
@@ -1115,6 +1143,7 @@ private fun MainShell(
                 proxyInfoEnabled = appUpdate.proxyInfoEnabled,
                 proxyInfoBusy = appUpdate.proxyInfoBusy,
                 proxyInfoAppsContent = appUpdate.proxyInfoAppsContent,
+                hidingStatus = appUpdate.hidingStatus,
                 onProxyInfoEnabledChange = actions::setProxyInfoEnabled,
                 onLoadAppAssignments = actions::loadAppAssignments,
                 onProxyInfoAppsSave = actions::saveProxyInfoApps,
@@ -1222,6 +1251,7 @@ private fun MainShell(
     tab == Tab.SUPPORT -> stringResource(R.string.nav_support)
     tab == Tab.APPS && appsRoute == AppsRoute.List -> stringResource(R.string.nav_programs)
     tab == Tab.APPS && appsRoute == AppsRoute.AnalysisTools -> stringResource(R.string.analysis_tools_title)
+    tab == Tab.APPS && appsRoute == AppsRoute.ConstructionStudio -> stringResource(R.string.construction_studio_title)
     tab == Tab.APPS && appsRoute == AppsRoute.DpiDetector -> stringResource(R.string.dpi_detector_title)
     tab == Tab.APPS && appsRoute == AppsRoute.NfqwsTester -> stringResource(R.string.nfqws_tester_title)
     tab == Tab.APPS && appsRoute is AppsRoute.Program -> {
@@ -1243,6 +1273,7 @@ private fun MainShell(
       when (val route = appsRoute) {
         AppsRoute.List -> null
         AppsRoute.AnalysisTools -> null
+        AppsRoute.ConstructionStudio -> null
         AppsRoute.DpiDetector -> null
         AppsRoute.NfqwsTester -> null
         is AppsRoute.Program -> {
@@ -1342,6 +1373,7 @@ private fun MainShell(
           onOpenProgram = { appsRoute = AppsRoute.Program(it) },
           onOpenProfile = { pid, pr -> appsRoute = AppsRoute.Profile(pid, pr) },
           onOpenAnalysisTools = { appsRoute = AppsRoute.AnalysisTools },
+          onOpenConstructionStudio = { appsRoute = AppsRoute.ConstructionStudio },
           onOpenDpiDetector = { appsRoute = AppsRoute.DpiDetector },
           onOpenNfqwsTester = { appsRoute = AppsRoute.NfqwsTester },
           actions = actions,
@@ -1366,6 +1398,7 @@ private fun MainShell(
               onOpenProgram = { appsRoute = AppsRoute.Program(it) },
               onOpenProfile = { pid, pr -> appsRoute = AppsRoute.Profile(pid, pr) },
               onOpenAnalysisTools = { appsRoute = AppsRoute.AnalysisTools },
+              onOpenConstructionStudio = { appsRoute = AppsRoute.ConstructionStudio },
               onOpenDpiDetector = { appsRoute = AppsRoute.DpiDetector },
               onOpenNfqwsTester = { appsRoute = AppsRoute.NfqwsTester },
               actions = actions,
@@ -1478,6 +1511,7 @@ private fun LandscapeShellContent(
   onOpenProgram: (String) -> Unit,
   onOpenProfile: (String, String) -> Unit,
   onOpenAnalysisTools: () -> Unit,
+  onOpenConstructionStudio: () -> Unit,
   onOpenDpiDetector: () -> Unit,
   onOpenNfqwsTester: () -> Unit,
   actions: ZdtdActions,
@@ -1515,6 +1549,7 @@ private fun LandscapeShellContent(
           onOpenProgram = onOpenProgram,
           onOpenProfile = onOpenProfile,
           onOpenAnalysisTools = onOpenAnalysisTools,
+          onOpenConstructionStudio = onOpenConstructionStudio,
           onOpenDpiDetector = onOpenDpiDetector,
           onOpenNfqwsTester = onOpenNfqwsTester,
           actions = actions,
@@ -2263,6 +2298,7 @@ private fun TabBody(
   onOpenProgram: (String) -> Unit,
   onOpenProfile: (String, String) -> Unit,
   onOpenAnalysisTools: () -> Unit,
+  onOpenConstructionStudio: () -> Unit,
   onOpenDpiDetector: () -> Unit,
   onOpenNfqwsTester: () -> Unit,
   actions: ZdtdActions,
@@ -2302,6 +2338,7 @@ private fun TabBody(
             onOpenProgram = onOpenProgram,
             onOpenProfile = onOpenProfile,
             onOpenAnalysisTools = onOpenAnalysisTools,
+            onOpenConstructionStudio = onOpenConstructionStudio,
             onOpenDpiDetector = onOpenDpiDetector,
             onOpenNfqwsTester = onOpenNfqwsTester,
             actions = actions,
