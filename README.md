@@ -1,5 +1,13 @@
 <div align="center">
 
+# ⛔ DANGER
+
+**This repository is archived and no longer maintained.**
+
+The **official** ZDT-D repository now fully supports **ARMv7.**
+
+**Check out the official branch:** https://github.com/GAME-OVER-op/ZDT-D
+
 # ⚠️ WARNING!
 
 </div>
